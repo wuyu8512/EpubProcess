@@ -9,10 +9,10 @@ namespace EpubProcess.Process
 {
     public abstract class BaseProcess
     {
-        public static IEnumerable<BaseProcess> Processes = new BaseProcess[] { new JavaScriptProcess(), new CSharpProcess() };
+        public static IEnumerable<BaseProcess> Processes = new BaseProcess[] { new JavaScriptProcess(), new CSharpProcess(), new PythonProcess() };
 
         public abstract string[] Extension { get; }
 
-        public abstract Task<int> ExecuteAsync(IEnumerable<string> script, EpubBook epub);
+        public abstract Task<int> ExecuteAsync(string script, EpubBook epub);
     }
 }

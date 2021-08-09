@@ -1,10 +1,8 @@
 ﻿using EpubProcess.Process;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Wuyu.Epub;
 
@@ -18,16 +16,23 @@ namespace EpubProcess
             var outPath = epubPath.Replace(Path.GetExtension(epubPath), string.Empty) + "_out.epub";
             var epub = EpubBook.ReadEpub(new FileStream(epubPath, FileMode.Open),
                 new FileStream(outPath, FileMode.Create));
+            var watch = new Stopwatch();
 
-            var extensionGroup = Directory.GetFiles("./Script").GroupBy(c => Path.GetExtension(c).ToLower());
-            foreach (var group in extensionGroup)
+            var files = Directory.GetFiles($".{Path.DirectorySeparatorChar}Script").ToArray();
+            Array.Sort(files);
+            foreach (var file in files)
             {
-                var extension = group.Key;
-                var process = BaseProcess.Processes.FirstOrDefault(c => c.Extension.Contains(extension, StringComparer.CurrentCultureIgnoreCase));
+                var extension = Path.GetExtension(file);
+                var process = BaseProcess.Processes.FirstOrDefault(c =>
+                    c.Extension.Contains(extension, StringComparer.CurrentCultureIgnoreCase));
                 if (process == default) continue;
                 try
                 {
-                    await process.ExecuteAsync(group.Select((c) => File.ReadAllText(c)), epub);
+                    Console.WriteLine("正在运行脚本：{0}", file);
+                    watch.Restart();
+                    await process.ExecuteAsync(await File.ReadAllTextAsync(file), epub);
+                    watch.Stop();
+                    Console.WriteLine("脚本运行完毕，用时{0}毫秒\r\n", watch.ElapsedMilliseconds);
                 }
                 catch (BuildException e)
                 {

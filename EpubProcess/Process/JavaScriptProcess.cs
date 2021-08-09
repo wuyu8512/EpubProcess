@@ -12,18 +12,19 @@ namespace EpubProcess.Process
 {
     class JavaScriptProcess : BaseProcess
     {
-        private readonly static IConfiguration config = Configuration.Default.WithCss().WithXml().WithJs().WithConsoleLogger(c => new MyLog());
-        private readonly IBrowsingContext browsingContext;
-        private readonly HtmlParser htmlParser;
-        public override string[] Extension => new[] { ".js" };
+        private static readonly IConfiguration Config =
+            Configuration.Default.WithCss().WithXml().WithJs().WithConsoleLogger(c => new MyLog());
+
+        private readonly HtmlParser _htmlParser;
+        public override string[] Extension => new[] {".js"};
 
         public JavaScriptProcess()
         {
-            browsingContext = BrowsingContext.New(config);
-            htmlParser = new HtmlParser(new HtmlParserOptions(), browsingContext);
+            var browsingContext = BrowsingContext.New(Config);
+            _htmlParser = new HtmlParser(new HtmlParserOptions(), browsingContext);
         }
 
-        public override async Task<int> ExecuteAsync(IEnumerable<string> scripts, EpubBook epub)
+        public override async Task<int> ExecuteAsync(string script, EpubBook epub)
         {
             foreach (var id in epub.GetTextIDs())
             {
@@ -31,11 +32,8 @@ namespace EpubProcess.Process
                 using var streamReader = new StreamReader(stream);
                 var content = await streamReader.ReadToEndAsync();
 
-                var document = await htmlParser.ParseDocumentAsync(content);
-                foreach (var script in scripts)
-                {
-                    document.ExecuteScript(script);
-                }
+                var document = await _htmlParser.ParseDocumentAsync(content);
+                document.ExecuteScript(script);
 
                 await using var streamWrite = new StreamWriter(stream);
                 streamWrite.BaseStream.SetLength(0);
