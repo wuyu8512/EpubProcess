@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31515.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EpubProcess", "EpubProcess\EpubProcess.csproj", "{9267C71C-9508-4BF9-AAFD-063478AED4FA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wuyu.Epub", "..\EpubBook\Wuyu.Epub\Wuyu.Epub.csproj", "{C01883E6-E68D-404C-84B5-CC3395B1C36F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9267C71C-9508-4BF9-AAFD-063478AED4FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9267C71C-9508-4BF9-AAFD-063478AED4FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9267C71C-9508-4BF9-AAFD-063478AED4FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9267C71C-9508-4BF9-AAFD-063478AED4FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C01883E6-E68D-404C-84B5-CC3395B1C36F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C01883E6-E68D-404C-84B5-CC3395B1C36F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C01883E6-E68D-404C-84B5-CC3395B1C36F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C01883E6-E68D-404C-84B5-CC3395B1C36F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {21B490EF-C900-45D6-B0E1-CCEB736CFFCA}
+	EndGlobalSection
+EndGlobal

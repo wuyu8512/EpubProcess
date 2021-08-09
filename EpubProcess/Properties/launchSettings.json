@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "EpubProcess": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\gao.jinfeng\\Downloads\\腦漿炸裂Girl (1).epub\""
+    }
+  }
+}

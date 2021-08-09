@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <ApplicationIcon />
+    <OutputType>Exe</OutputType>
+    <StartupObject />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Script\Example.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Script\Example.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="0.16.0" />
+    <PackageReference Include="AngleSharp.Css" Version="0.16.0" />
+    <PackageReference Include="AngleSharp.Diffing" Version="0.16.0" />
+    <PackageReference Include="AngleSharp.Io" Version="0.16.0" />
+    <PackageReference Include="AngleSharp.Js" Version="0.15.0" />
+    <PackageReference Include="AngleSharp.Wasm" Version="0.13.0" />
+    <PackageReference Include="AngleSharp.Xml" Version="0.16.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.10.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\EpubBook\Wuyu.Epub\Wuyu.Epub.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Script\Example.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Script\Example.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
