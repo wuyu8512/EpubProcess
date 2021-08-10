@@ -42,6 +42,7 @@ namespace EpubProcess
                         Console.WriteLine(diagnostic.ToString());
                     }
                 }
+
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message);

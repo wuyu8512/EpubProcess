@@ -8,7 +8,7 @@ namespace EpubProcess
     /// <summary>
     /// 全角转半角
     /// </summary>
-    public class Example : Script
+    public class FullToHalf : Script
     {
         public override async Task<int> ParseAsync(EpubBook epub)
         {

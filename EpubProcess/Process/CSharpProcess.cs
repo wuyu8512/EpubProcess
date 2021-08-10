@@ -15,19 +15,29 @@ namespace EpubProcess.Process
     class CSharpProcess : BaseProcess
     {
         private static readonly Lazy<IEnumerable<PortableExecutableReference>> References = new(
-            () => AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic).Select(x => MetadataReference.CreateFromFile(x.Location))
+            () =>
+            {
+                var references = AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic).Select(x => MetadataReference.CreateFromFile(x.Location)).ToList();
+
+                foreach (var file in Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll"))
+                {
+                    references.Add(MetadataReference.CreateFromFile(file));
+                }
+
+                return references;
+            }
         );
 
         private static readonly CSharpParseOptions Options =
             CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp9);
 
-        public override string[] Extension { get; } = {".cs"};
+        public override string[] Extension { get; } = { ".cs" };
 
         public override async Task<int> ExecuteAsync(string script, EpubBook epub)
         {
             var parsedSyntaxTree = SyntaxFactory.ParseSyntaxTree(script, Options);
             var compilation = CSharpCompilation.Create($"{script.GetHashCode()}.dll",
-                    new[] {parsedSyntaxTree},
+                    new[] { parsedSyntaxTree },
                     //references: references,
                     options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
                         optimizationLevel: OptimizationLevel.Release,
@@ -40,7 +50,7 @@ namespace EpubProcess.Process
             {
                 var assembly = Assembly.Load(ms.ToArray());
                 var type = assembly.GetTypes().First();
-                var instance = (Script) Activator.CreateInstance(type);
+                var instance = (Script)Activator.CreateInstance(type);
                 Debug.Assert(instance != null, nameof(instance) + " != null");
                 await instance.ParseAsync(epub);
             }
