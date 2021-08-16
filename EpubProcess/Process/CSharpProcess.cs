@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Wuyu.Epub;
+using System.Text.Json;
 
 namespace EpubProcess.Process
 {
@@ -17,7 +18,10 @@ namespace EpubProcess.Process
         private static readonly Lazy<IEnumerable<PortableExecutableReference>> References = new(
             () =>
             {
-                var references = AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic).Select(x => MetadataReference.CreateFromFile(x.Location)).ToList();
+                var references = AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic && !string.IsNullOrEmpty(x.Location)).Select(x => 
+                {
+                    return MetadataReference.CreateFromFile(x.Location);
+                }).ToList();
 
                 foreach (var file in Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll"))
                 {

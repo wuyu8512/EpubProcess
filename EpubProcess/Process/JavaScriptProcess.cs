@@ -13,7 +13,7 @@ namespace EpubProcess.Process
     class JavaScriptProcess : BaseProcess
     {
         private static readonly IConfiguration Config =
-            Configuration.Default.WithCss().WithXml().WithJs().WithConsoleLogger(c => new MyLog());
+            Configuration.Default.WithCss().WithJs().WithConsoleLogger(c => new MyLog());
 
         private readonly HtmlParser _htmlParser;
         public override string[] Extension => new[] {".js"};

@@ -1,16 +1,12 @@
-﻿using AngleSharp.Html.Parser;
-using System;
-using System.Collections.Generic;
-using AngleSharp.Js;
+﻿using AngleSharp.Html.Dom;
+using AngleSharp.Html.Parser;
 using AngleSharp.Xhtml;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AngleSharp.Html.Dom;
 using System.Threading.Tasks;
 using Wuyu.Epub;
-using AngleSharp;
-
+ 
 namespace EpubProcess
 {
     class EpubParse : Script
@@ -49,13 +45,60 @@ namespace EpubProcess
 
                 var doc = await Parser.ParseDocumentAsync(content);
 
-                // 处理彩页图片
-                var svgs = doc.QuerySelectorAll("svg");
-                foreach (var svg in svgs)
+                ProcessImage(doc);
+                RemoveEmptyParagraphElement(doc);
+
+                await using var streamWrite = new StreamWriter(stream, Encoding.UTF8);
+                streamWrite.BaseStream.SetLength(0);
+                doc.ToHtml(streamWrite, XhtmlMarkupFormatter.Instance);
+            }
+            return 0;
+        }
+
+        // 删除章节开头没用的空行
+        private void RemoveEmptyParagraphElement(IHtmlDocument doc)
+        {
+            if (doc.Body.FirstElementChild.ChildElementCount >= 4)
+            {
+                var main = doc.Body.FirstElementChild;
+
+                var node = main.FirstElementChild;
+                while (node is IHtmlParagraphElement && node.IsEmpty())
                 {
-                    var svgImg = svg.QuerySelector("image");
-                    var src = svgImg.GetAttribute("href");
-                    Console.WriteLine(src);
+                    var next = node.NextElementSibling;
+                    node.Remove();
+                    node = next;
+                }
+            }
+        }
+
+        // 图片处理
+        private void ProcessImage(IHtmlDocument doc)
+        {
+            // 处理彩页图片
+            var svgs = doc.QuerySelectorAll("svg");
+            foreach (var svg in svgs)
+            {
+                var svgImg = svg.QuerySelector("image");
+                var src = svgImg.GetAttribute("href");
+
+                var div = doc.CreateElement("div");
+                div.ClassName = "illus duokan-image-single";
+
+                var img = doc.CreateElement("img");
+                img.SetAttribute("alt", Path.GetFileNameWithoutExtension(src));
+                img.SetAttribute("src", src);
+                div.AppendChild(img);
+
+                svg.OuterHtml = div.ToXhtml();
+            }
+            // 处理黑白图片
+            foreach (var pNode in doc.QuerySelectorAll("p"))
+            {
+                if (pNode.ChildElementCount != 1) continue;
+                if (pNode.FirstElementChild is IHtmlImageElement pImg)
+                {
+                    var src = pImg.GetAttribute("src");
 
                     var div = doc.CreateElement("div");
                     div.ClassName = "illus duokan-image-single";
@@ -65,47 +108,9 @@ namespace EpubProcess
                     img.SetAttribute("src", src);
                     div.AppendChild(img);
 
-                    svg.OuterHtml = div.ToXhtml();
+                    pNode.OuterHtml = pNode.ToXhtml();
                 }
-                // 处理黑白图片
-                foreach (var pNode in doc.QuerySelectorAll("p"))
-                {
-                    if (pNode.ChildElementCount != 1) continue;
-                    if (pNode.FirstElementChild is IHtmlImageElement pImg)
-                    {
-                        var src = pImg.GetAttribute("src");
-
-                        var div = doc.CreateElement("div");
-                        div.ClassName = "illus duokan-image-single";
-
-                        var img = doc.CreateElement("img");
-                        img.SetAttribute("alt", Path.GetFileNameWithoutExtension(src));
-                        img.SetAttribute("src", src);
-                        div.AppendChild(img);
-
-                        pNode.OuterHtml = pNode.ToXhtml();
-                    }
-                }
-
-                // 处理章节开头没用的空行
-                if (doc.Body.FirstElementChild.ChildElementCount >= 4)
-                {
-                    var main = doc.Body.FirstElementChild;
-                    
-                    var node = main.FirstElementChild;
-                    while (node is IHtmlParagraphElement && node.IsEmpty())
-                    {
-                        var next = node.NextElementSibling;
-                        node.Remove();
-                        node = next;
-                    }
-                }
-
-                await using var streamWrite = new StreamWriter(stream, Encoding.UTF8);
-                streamWrite.BaseStream.SetLength(0);
-                doc.ToHtml(streamWrite, XhtmlMarkupFormatter.Instance);
             }
-            return 0;
         }
     }
 }

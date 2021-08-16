@@ -14,7 +14,7 @@ namespace EpubProcess
     {
         public override async Task<int> ParseAsync(EpubBook epub)
         {
-            var Config = Configuration.Default.WithCss().WithXml().WithJs();
+            var Config = Configuration.Default.WithCss().WithJs();
             var browsingContext = BrowsingContext.New(Config);
             var _htmlParser = new HtmlParser(new HtmlParserOptions(), browsingContext);
 

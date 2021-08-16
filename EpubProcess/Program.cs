@@ -36,16 +36,14 @@ namespace EpubProcess
                 }
                 catch (BuildException e)
                 {
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.ToString());
                     foreach (var diagnostic in e.Diagnostics)
                     {
                         Console.WriteLine(diagnostic.ToString());
                     }
                 }
-
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
                     Console.WriteLine(e.ToString());
                 }
             }
