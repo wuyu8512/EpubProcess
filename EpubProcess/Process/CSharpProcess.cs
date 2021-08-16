@@ -44,11 +44,12 @@ namespace EpubProcess.Process
                         assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default))
                 .AddReferences(References.Value);
             await using var ms = new MemoryStream();
-            var result = compilation.Emit(ms);
+            await using var msPdb = new MemoryStream();
+            var result = compilation.Emit(ms, msPdb);
 
             if (result.Success)
             {
-                var assembly = Assembly.Load(ms.ToArray());
+                var assembly = Assembly.Load(ms.ToArray(), msPdb.ToArray());
                 var type = assembly.GetTypes().First();
                 var instance = (Script)Activator.CreateInstance(type);
                 Debug.Assert(instance != null, nameof(instance) + " != null");
