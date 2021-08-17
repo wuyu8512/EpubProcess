@@ -23,7 +23,8 @@ namespace EpubProcess
         public override async Task<int> ParseAsync(EpubBook epub)
         {
             // 删掉所有的Style文件，用默认的替换
-            epub.GetItemIDs(new[] { ".css" }).ForEach(item => epub.DeleteItem(item));
+            epub.GetItemIDs(new[] { ".css" }).ToArray().ForEach(item => epub.DeleteItem(item));
+
             epub.AddItem(new EpubItem
             {
                 EntryName = "Styles/style.css",
@@ -57,8 +58,8 @@ namespace EpubProcess
                 doc.ToHtml(streamWrite, XhtmlMarkupFormatter.Instance);
             }
 
-            // 必须在图片处理完之后运行
-            await ProcessCover(epub);
+            await ProcessCover(epub); // 必须在图片处理完之后运行
+            ProcessNav(epub);
 
             return 0;
         }
@@ -137,6 +138,24 @@ namespace EpubProcess
         private void ProcessClass(IHtmlDocument doc)
         {
             doc.QuerySelectorAll("span.tcy").ForEach(span => span.OuterHtml = span.TextContent.Trim());
+        }
+
+        private void ProcessNav(EpubBook epub)
+        {
+            var nav = epub.GetNav();
+            if (nav == null)
+            {
+                Console.WriteLine("本epub无法找到目录，跳过目录处理");
+                return;
+            }
+            var last = epub.Nav.Last();
+            if (last.Title == "版權頁")
+            {
+                // TODO 目录
+                var id = epub.GetItemByHref(last.Href.Split('#')[0]).ID;
+                epub.DeleteItem(id);
+                last.Remove();
+            }
         }
     }
 }
