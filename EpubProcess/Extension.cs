@@ -18,9 +18,23 @@ namespace EpubProcess
 
         public static bool IsEmpty(this AngleSharp.Dom.IElement element)
         {
-            if (element.ChildElementCount == 0 && string.IsNullOrWhiteSpace(element.TextContent)) return true;
+            if (element.ChildElementCount == 0 && element.TextContent.IsEmpty()) return true;
             else if (element.ChildElementCount == 1 && element.FirstElementChild is IHtmlBreakRowElement) return true;
             return false;
+        }
+
+        public static bool IsEmpty(this string str)
+        {
+            str = str?.Replace("\r", "").Replace("\n", "");
+            return string.IsNullOrWhiteSpace(str);
+        }
+
+        public static void ForEach<T>(this IEnumerable<T> list, Action<T> action)
+        {
+            foreach (var item in list)
+            {
+                action(item);
+            }
         }
     }
 }

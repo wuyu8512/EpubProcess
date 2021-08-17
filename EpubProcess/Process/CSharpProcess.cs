@@ -1,5 +1,4 @@
-﻿using EpubProcess.Process;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
@@ -9,7 +8,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Wuyu.Epub;
-using System.Text.Json;
 
 namespace EpubProcess.Process
 {
@@ -20,6 +18,7 @@ namespace EpubProcess.Process
             {
                 var references = AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic && !string.IsNullOrEmpty(x.Location)).Select(x => 
                 {
+                    //Console.WriteLine(x.Location);
                     return MetadataReference.CreateFromFile(x.Location);
                 }).ToList();
 

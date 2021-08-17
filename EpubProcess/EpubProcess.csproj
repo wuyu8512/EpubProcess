@@ -5,6 +5,7 @@
     <ApplicationIcon />
     <OutputType>Exe</OutputType>
     <StartupObject />
+    <SatelliteResourceLanguages>zh-Hans;zh-Hant</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,7 +35,7 @@
     <Compile Update="Script\0.FullToHalf.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
-    <Compile Update="Script\3.ExampleReg.cs">
+    <Compile Update="Script\3.ExampleReplace.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
     <Compile Update="Script\2.EpubParse.cs">
