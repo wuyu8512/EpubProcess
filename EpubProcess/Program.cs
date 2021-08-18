@@ -1,4 +1,6 @@
-﻿using EpubProcess.Process;
+﻿using AngleSharp;
+using AngleSharp.Html.Parser;
+using EpubProcess.Process;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -10,6 +12,10 @@ namespace EpubProcess
 {
     public static class Program
     {
+        //public static readonly IConfiguration Config = Configuration.Default.WithCss().WithJs();
+        //public static readonly IBrowsingContext Context = BrowsingContext.New(Config);
+        //public static readonly HtmlParser HtmlParser = new(new HtmlParserOptions(), Context);
+
         static async Task Main(string[] args)
         {
             var epubPath = args[0];

@@ -19,28 +19,43 @@ namespace EpubProcess
             var browsingContext = BrowsingContext.New(Config);
             var _htmlParser = new HtmlParser(new HtmlParserOptions(), browsingContext);
 
+            var xhtmlTemplate = await File.ReadAllTextAsync("./Script/Res/html.txt");
+
             foreach (var id in epub.GetTextIDs())
             {
                 var stream = epub.GetItemStreamByID(id);
-                using var streamReader = new StreamReader(stream, Encoding.UTF8);
+                using var streamReader = new StreamReader(stream);
                 var content = await streamReader.ReadToEndAsync();
 
                 // 解析
                 var doc = await _htmlParser.ParseDocumentAsync(content);
 
-                using var sw = new StreamWriter(new MemoryStream());
                 // 标准化
                 var body = doc.Body.ChildNodes.ToXhtml();
-                var xhtmlTemplate = await File.ReadAllTextAsync("./Script/Res/html.txt");
                 var html = string.Format(xhtmlTemplate, doc.Title, body);
 
                 XDocument xDocument = XDocument.Parse(html);
 
-                await using var streamWrite = new StreamWriter(stream, Encoding.UTF8);
-                streamWrite.BaseStream.SetLength(0);
+                stream.SetLength(0);
+                stream.Position = 0;
+                await using var streamWrite = new StreamWriter(stream);
                 await xDocument.SaveAsync(streamWrite, SaveOptions.None, System.Threading.CancellationToken.None);
-                //await streamWrite.WriteAsync(html);
             }
+
+            var nav = epub.GetNav();
+            if (nav != null)
+            {
+                var content = epub.Nav.BaseElement.Document.ToString();
+
+                var doc = await _htmlParser.ParseDocumentAsync(content);
+                var body = doc.Body.ChildNodes.ToXhtml();
+                var html = string.Format(xhtmlTemplate, doc.Title, body);
+                XDocument xDocument = XDocument.Parse(html);
+
+                await epub.SetItemContentByIDAsync(nav.ID, xDocument.ToString());
+                epub.UpDataNav();
+            }
+
             return 0;
         }
     }

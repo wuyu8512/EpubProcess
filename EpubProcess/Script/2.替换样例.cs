@@ -1,18 +1,18 @@
 ﻿using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Wuyu.Epub;
-using System;
 
 namespace EpubProcess
 {
     /// <summary>
-    /// 执行简单的替换
+    /// 执行简单的替换，本文件为通用模板，可照抄代码改成针对不同书的专用模板
     /// </summary>
     public class ExampleReplace : Script
     {
@@ -22,32 +22,58 @@ namespace EpubProcess
 
         private static readonly Dictionary<char, char> ReplaceCharDir = new[]
         {
-            //('妳','你'),
-            ('姊','姐'),
+            //('　',' '),
+            ('~','～'),
+            ('─','—'),
+            ('╳','×'),
+            ('‥','：'),
+            ('︽','《'),('︾','》'),
+            ('﹁','「'),('﹂','」'),
+            ('﹃','『'),('﹄','』'),
+            ('︿','〈'),('﹀','〉'),
         }.ToDictionary(x => x.Item1, x => x.Item2);
+
+        private static readonly (string key, string value)[] ReplaceString = new[]
+        {
+            ("align-end","right"),
+            ("――","——"),
+        };
+
+        private static readonly (string key, string value)[] ReplaceReg = new[]
+        {
+            ("<p>[　 ]+","<p>"),
+            ("──|－－|—— | ——|――","——"),
+            (@"\.\.\.\.\.\.|⋯⋯","……"),
+            ("~|∼|〜","～"),
+            ("•|‧|・|．|˙|･|·","•"),
+        };
 
         public override async Task<int> ParseAsync(EpubBook epub)
         {
-            foreach (var id in epub.GetTextIDs())
+            foreach (var item in epub.GetHtmlItems())
             {
-                Console.WriteLine(id);
-                var stream = epub.GetItemStreamByID(id);
+                Console.WriteLine(item.ID);
+                using var stream = epub.GetItemStreamByID(item.ID);
                 using var streamReader = new StreamReader(stream);
                 var content = await streamReader.ReadToEndAsync();
 
                 // 普通替换
-                content = content.Replace("align-end", "right");
+                ReplaceString.ForEach((item) => content = content.Replace(item.key, item.value));
 
                 // 正则替换
-                content = Regex.Replace(content, "<p>　+", "<p>");
+                ReplaceReg.ForEach((item) => content = Regex.Replace(content, item.key, item.value));
 
                 // 单字符替换
                 var doc = await HtmlParser.ParseDocumentAsync(content);
                 ReplaceChar(doc);
 
-                await using var streamWrite = new StreamWriter(stream);
-                streamWrite.BaseStream.SetLength(0);
-                await streamWrite.WriteAsync(doc.ToXhtml());
+                await using (var streamWrite = new StreamWriter(stream))
+                {
+                    streamWrite.BaseStream.SetLength(0);
+                    await streamWrite.WriteAsync(doc.ToXhtml());
+                }
+
+                if (item.IsNav) epub.UpDataNav();
             }
             return 0;
         }

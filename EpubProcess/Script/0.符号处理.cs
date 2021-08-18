@@ -10,16 +10,20 @@ namespace EpubProcess
     {
         public override async Task<int> ParseAsync(EpubBook epub)
         {
-            foreach (var id in epub.GetTextIDs())
+            foreach (var item in epub.GetHtmlItems())
             {
-                var stream = epub.GetItemStreamByID(id);
-                using var streamReader = new StreamReader(stream, System.Text.Encoding.UTF8);
+                using var stream = epub.GetItemStreamByID(item.ID);
+                using var streamReader = new StreamReader(stream);
 
                 var content = ToDBC(await streamReader.ReadToEndAsync());
 
-                await using var streamWrite = new StreamWriter(stream, System.Text.Encoding.UTF8);
-                streamWrite.BaseStream.SetLength(0);
-                await streamWrite.WriteAsync(content);
+                await using (var streamWrite = new StreamWriter(stream))
+                {
+                    streamWrite.BaseStream.SetLength(0);
+                    await streamWrite.WriteAsync(content);
+                }
+
+                if (item.IsNav) epub.UpDataNav();
             }
             return 0;
         }

@@ -19,10 +19,12 @@ namespace EpubProcess
         private static readonly IBrowsingContext Context = BrowsingContext.New(Config);
         private static readonly HtmlParser HtmlParser = new(new HtmlParserOptions(), Context);
 
+        private static readonly char[] EmptyChar = new[] { ' ', '\r', '\n', '\t', '　' };
+
         public override async Task<int> ParseAsync(EpubBook epub)
         {
             // 删掉所有的Style文件，用默认的替换，此处必须ToArray，否则会遇到多次迭代问题
-            epub.GetItemIDs(new[] { ".css" }).ToArray().ForEach(item => epub.DeleteItem(item));
+            epub.GetItems(new[] { ".css" }).ToArray().ForEach(item => epub.DeleteItem(item.ID));
 
             epub.AddItem(new EpubItem
             {
@@ -64,13 +66,14 @@ namespace EpubProcess
             return 0;
         }
 
-        // 删除章节开头没用的空行
+        // 删除章节头尾没用的空行
         private static void RemoveEmptyParagraphElement(IHtmlDocument doc)
         {
             if (doc.Body.FirstElementChild.ChildElementCount >= 3)
             {
                 var main = doc.Body.FirstElementChild;
                 RemoveEmptyParagraphElement(main.FirstElementChild);
+                RemoveEmptyParagraphElementReverse(main.LastElementChild);
             }
         }
 
@@ -79,6 +82,16 @@ namespace EpubProcess
             while (element is IHtmlParagraphElement && element.IsEmpty())
             {
                 var next = element.NextElementSibling;
+                element.Remove();
+                element = next;
+            }
+        }
+
+        private static void RemoveEmptyParagraphElementReverse(IElement element)
+        {
+            while (element is IHtmlParagraphElement && element.IsEmpty())
+            {
+                var next = element.PreviousElementSibling;
                 element.Remove();
                 element = next;
             }
@@ -106,7 +119,7 @@ namespace EpubProcess
             // 处理黑白图片
             foreach (var imgNode in doc.QuerySelectorAll("p img"))
             {
-                if (imgNode.ParentElement is IHtmlParagraphElement && imgNode.ParentElement.ChildElementCount == 1 && imgNode.ParentElement.TextContent.IsEmpty())
+                if (imgNode.ParentElement is IHtmlParagraphElement && imgNode.ParentElement.ChildElementCount == 1 && imgNode.ParentElement.GetInnerText().IsEmpty())
                 {
                     var src = imgNode.GetAttribute("src");
 
@@ -131,16 +144,27 @@ namespace EpubProcess
                 Console.WriteLine("本epub无法找到封面图片，跳过封面处理");
                 return;
             }
-            var doc = await HtmlParser.ParseDocumentAsync(epub.GetItemContentByID(epub.GetItemByHref(html.Href).ID));
-            var img = (IHtmlImageElement)doc.QuerySelector("img");
-            var src = img.GetAttribute("src");
-            epub.CreateCoverXhtml(epub.GetItemByHref(Util.ZipResolvePath(Path.GetDirectoryName(html.Href), src)).ID);
+            string id;
+            if (epub.Cover.IsEmpty())
+            {
+                var doc = await HtmlParser.ParseDocumentAsync(epub.GetItemContentByID(epub.GetItemByHref(html.Href).ID));
+                var img = (IHtmlImageElement)doc.QuerySelector("img");
+                var src = img.GetAttribute("src");
+                id = epub.GetItemByHref(Util.ZipResolvePath(Path.GetDirectoryName(html.Href), src)).ID;
+            }
+            else
+            {
+                id = epub.Cover;
+            }
+
+            epub.CreateCoverXhtml(id);
         }
 
         // 处理特殊样式
         private void ProcessClass(IHtmlDocument doc)
         {
-            doc.QuerySelectorAll("span.tcy").ForEach(span => span.OuterHtml = span.TextContent.Trim());
+            doc.QuerySelectorAll("span.tcy").ForEach(span => span.OuterHtml = span.GetInnerText().Trim(EmptyChar));
+            doc.QuerySelectorAll("span.sideways").ForEach(span => span.OuterHtml = span.GetInnerText().Trim(EmptyChar));
         }
 
         private async Task ProcessNav(EpubBook epub)
@@ -192,11 +216,11 @@ namespace EpubProcess
 
                 foreach (var pNode in doc.QuerySelectorAll("p").Take(10))
                 {
-                    Console.WriteLine(pNode.TextContent);
-                    if (pNode.TextContent == item.Title)
+                    if (pNode.GetInnerText().Trim(EmptyChar) == item.Title)
                     {
                         RemoveEmptyParagraphElement(pNode.NextElementSibling);
-                        pNode.OuterHtml = $"<h4>{item.Title}</h4>";
+                        if (pNode.OuterHtml.IndexOf(item.Title) > -1) pNode.OuterHtml = $"<h4>{item.Title}</h4>";
+                        else pNode.OuterHtml = $"<h4>{pNode.InnerHtml}</h4>";
                         break;
                     }
                 }

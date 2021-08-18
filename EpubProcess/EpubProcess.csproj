@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Script\9.代码美化改进.cs">
+    <Compile Update="Script\99999.代码美化改进.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
     <Compile Update="Script\0.符号处理.cs">
@@ -38,7 +38,10 @@
     <Compile Update="Script\2.替换样例.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
-    <Compile Update="Script\3.书源解析.cs">
+    <Compile Update="Script\4.书源解析.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
+    <Compile Update="Script\文学少女.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
   </ItemGroup>
