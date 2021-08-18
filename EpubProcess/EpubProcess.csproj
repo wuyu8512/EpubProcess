@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Script\0.符号处理.cs">
+    <Resource Include="Script\0.全角符号处理.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
@@ -32,7 +32,7 @@
     <Compile Update="Script\99999.代码美化改进.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
-    <Compile Update="Script\0.符号处理.cs">
+    <Compile Update="Script\0.全角符号处理.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
     <Compile Update="Script\2.替换样例.cs">

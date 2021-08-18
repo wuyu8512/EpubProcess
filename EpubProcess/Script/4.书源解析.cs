@@ -79,7 +79,7 @@ namespace EpubProcess
 
         private static void RemoveEmptyParagraphElement(IElement element)
         {
-            while (element is IHtmlParagraphElement && element.IsEmpty())
+            while (!(element is IHtmlImageElement) && element.IsEmpty())
             {
                 var next = element.NextElementSibling;
                 element.Remove();
@@ -89,7 +89,7 @@ namespace EpubProcess
 
         private static void RemoveEmptyParagraphElementReverse(IElement element)
         {
-            while (element is IHtmlParagraphElement && element.IsEmpty())
+            while (!(element is IHtmlImageElement) && element.IsEmpty())
             {
                 var next = element.PreviousElementSibling;
                 element.Remove();
