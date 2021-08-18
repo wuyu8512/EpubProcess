@@ -16,18 +16,14 @@ namespace EpubProcess.Process
         private static readonly Lazy<IEnumerable<PortableExecutableReference>> References = new(
             () =>
             {
-                var references = AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic && !string.IsNullOrEmpty(x.Location)).Select(x => 
-                {
-                    //Console.WriteLine(x.Location);
-                    return MetadataReference.CreateFromFile(x.Location);
-                }).ToList();
+                var path = AppDomain.CurrentDomain.GetAssemblies().First(x => Path.GetFileName(x.Location) == "System.Private.CoreLib.dll").Location;
 
-                foreach (var file in Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll"))
-                {
-                    references.Add(MetadataReference.CreateFromFile(file));
-                }
+                var fileList = new HashSet<string>();
+                AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic && !string.IsNullOrEmpty(x.Location)).ForEach(x => fileList.Add(x.Location));
+                Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll").ForEach(x => fileList.Add(x));
+                Directory.GetFiles(Path.GetDirectoryName(path), "System.*.dll").ForEach(x => fileList.Add(x));
 
-                return references;
+                return fileList.Select(x => MetadataReference.CreateFromFile(x));
             }
         );
 

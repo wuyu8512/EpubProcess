@@ -22,7 +22,7 @@ namespace EpubProcess
 
         private static readonly Dictionary<char, char> ReplaceCharDir = new[]
         {
-            ('妳','你'),
+            //('妳','你'),
             ('姊','姐'),
         }.ToDictionary(x => x.Item1, x => x.Item2);
 
@@ -39,7 +39,7 @@ namespace EpubProcess
                 content = content.Replace("align-end", "right");
 
                 // 正则替换
-                //content = Regex.Replace(content, "妳", "你");
+                content = Regex.Replace(content, "<p>　+", "<p>");
 
                 // 单字符替换
                 var doc = await HtmlParser.ParseDocumentAsync(content);
@@ -47,7 +47,7 @@ namespace EpubProcess
 
                 await using var streamWrite = new StreamWriter(stream);
                 streamWrite.BaseStream.SetLength(0);
-                await streamWrite.WriteAsync(content);
+                await streamWrite.WriteAsync(doc.ToXhtml());
             }
             return 0;
         }

@@ -35,7 +35,10 @@ namespace EpubProcess
                     watch.Restart();
                     await process.ExecuteAsync(await File.ReadAllTextAsync(file), epub);
                     watch.Stop();
-                    Console.WriteLine("脚本运行完毕，用时{0}毫秒\r\n", watch.ElapsedMilliseconds);
+                    Console.WriteLine("脚本运行完毕，用时{0}毫秒", watch.ElapsedMilliseconds);
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("-----------------------------------------------------");
+                    Console.ForegroundColor = ConsoleColor.White;
                 }
                 catch (BuildException e)
                 {

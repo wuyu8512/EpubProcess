@@ -1,16 +1,15 @@
-﻿using AngleSharp.Html.Dom;
+﻿using AngleSharp;
+using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using AngleSharp.Xhtml;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Wuyu.Epub;
-using System;
-using AngleSharp;
-using AngleSharp.Dom;
-using AngleSharp.Css.Dom;
 using System.Text.RegularExpressions;
+using AngleSharp.Dom;
 
 namespace EpubProcess
 {
@@ -22,7 +21,7 @@ namespace EpubProcess
 
         public override async Task<int> ParseAsync(EpubBook epub)
         {
-            // 删掉所有的Style文件，用默认的替换
+            // 删掉所有的Style文件，用默认的替换，此处必须ToArray，否则会遇到多次迭代问题
             epub.GetItemIDs(new[] { ".css" }).ToArray().ForEach(item => epub.DeleteItem(item));
 
             epub.AddItem(new EpubItem
@@ -44,7 +43,7 @@ namespace EpubProcess
             foreach (var id in epub.GetTextIDs())
             {
                 var stream = epub.GetItemStreamByID(id);
-                using var streamReader = new StreamReader(stream, Encoding.UTF8);
+                using var streamReader = new StreamReader(stream);
                 var content = await streamReader.ReadToEndAsync();
 
                 var doc = await HtmlParser.ParseDocumentAsync(content);
@@ -53,31 +52,35 @@ namespace EpubProcess
                 RemoveEmptyParagraphElement(doc);
                 ProcessClass(doc);
 
-                await using var streamWrite = new StreamWriter(stream, Encoding.UTF8);
+                await using var streamWrite = new StreamWriter(stream);
                 streamWrite.BaseStream.SetLength(0);
                 doc.ToHtml(streamWrite, XhtmlMarkupFormatter.Instance);
             }
 
             await ProcessCover(epub); // 必须在图片处理完之后运行
-            ProcessNav(epub);
+            await ProcessNav(epub);
+            await ProcessTitle(epub);
 
             return 0;
         }
 
         // 删除章节开头没用的空行
-        private void RemoveEmptyParagraphElement(IHtmlDocument doc)
+        private static void RemoveEmptyParagraphElement(IHtmlDocument doc)
         {
-            if (doc.Body.FirstElementChild.ChildElementCount >= 4)
+            if (doc.Body.FirstElementChild.ChildElementCount >= 3)
             {
                 var main = doc.Body.FirstElementChild;
+                RemoveEmptyParagraphElement(main.FirstElementChild);
+            }
+        }
 
-                var node = main.FirstElementChild;
-                while (node is IHtmlParagraphElement && node.IsEmpty())
-                {
-                    var next = node.NextElementSibling;
-                    node.Remove();
-                    node = next;
-                }
+        private static void RemoveEmptyParagraphElement(IElement element)
+        {
+            while (element is IHtmlParagraphElement && element.IsEmpty())
+            {
+                var next = element.NextElementSibling;
+                element.Remove();
+                element = next;
             }
         }
 
@@ -140,7 +143,7 @@ namespace EpubProcess
             doc.QuerySelectorAll("span.tcy").ForEach(span => span.OuterHtml = span.TextContent.Trim());
         }
 
-        private void ProcessNav(EpubBook epub)
+        private async Task ProcessNav(EpubBook epub)
         {
             var nav = epub.GetNav();
             if (nav == null)
@@ -151,10 +154,54 @@ namespace EpubProcess
             var last = epub.Nav.Last();
             if (last.Title == "版權頁")
             {
-                // TODO 目录
-                var id = epub.GetItemByHref(last.Href.Split('#')[0]).ID;
+                var basePath = Path.GetDirectoryName(nav.Href);
+                var id = epub.GetItemByHref(Util.ZipResolvePath(basePath, last.Href.Split('#')[0])).ID;
+                var content = epub.GetItemContentByID(id);
+                var doc = await HtmlParser.ParseDocumentAsync(content);
+                foreach (IHtmlImageElement img in doc.QuerySelectorAll("img"))
+                {
+                    var src = img.GetAttribute("src");
+                    var imgPath = Util.ZipResolvePath(basePath, src);
+                    var imgItem = epub.GetItemByHref(imgPath);
+                    epub.DeleteItem(imgItem.ID);
+                }
+
                 epub.DeleteItem(id);
                 last.Remove();
+            }
+        }
+
+        private async Task ProcessTitle(EpubBook epub)
+        {
+            var nav = epub.GetNav();
+            if (nav == null)
+            {
+                Console.WriteLine("本epub无法找到目录，跳过标题处理");
+                return;
+            }
+
+            var basePath = Path.GetDirectoryName(nav.Href);
+            foreach (var item in epub.Nav)
+            {
+                var href = Util.ZipResolvePath(basePath, item.Href.Split('#')[0]);
+                var id = epub.GetItemByHref(href).ID;
+                var content = await epub.GetItemContentByIDAsync(id);
+
+                var doc = await HtmlParser.ParseDocumentAsync(content);
+                doc.Title = item.Title;
+
+                foreach (var pNode in doc.QuerySelectorAll("p").Take(10))
+                {
+                    Console.WriteLine(pNode.TextContent);
+                    if (pNode.TextContent == item.Title)
+                    {
+                        RemoveEmptyParagraphElement(pNode.NextElementSibling);
+                        pNode.OuterHtml = $"<h4>{item.Title}</h4>";
+                        break;
+                    }
+                }
+
+                await epub.SetItemContentByIDAsync(id, doc.ToXhtml());
             }
         }
     }

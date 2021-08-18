@@ -23,22 +23,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Script\0.FullToHalf.cs">
+    <Resource Include="Script\0.符号处理.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Script\9.EpubFormat.cs">
+    <Compile Update="Script\9.代码美化改进.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
-    <Compile Update="Script\0.FullToHalf.cs">
+    <Compile Update="Script\0.符号处理.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
-    <Compile Update="Script\3.ExampleReplace.cs">
+    <Compile Update="Script\2.替换样例.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
-    <Compile Update="Script\2.EpubParse.cs">
+    <Compile Update="Script\3.书源解析.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
   </ItemGroup>

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Wuyu.Epub;
 using AngleSharp.Html.Parser;
 using AngleSharp;
+using System.Xml.Linq;
 
 namespace EpubProcess
 {
@@ -33,9 +34,12 @@ namespace EpubProcess
                 var xhtmlTemplate = await File.ReadAllTextAsync("./Script/Res/html.txt");
                 var html = string.Format(xhtmlTemplate, doc.Title, body);
 
+                XDocument xDocument = XDocument.Parse(html);
+
                 await using var streamWrite = new StreamWriter(stream, Encoding.UTF8);
                 streamWrite.BaseStream.SetLength(0);
-                await streamWrite.WriteAsync(html);
+                await xDocument.SaveAsync(streamWrite, SaveOptions.None, System.Threading.CancellationToken.None);
+                //await streamWrite.WriteAsync(html);
             }
             return 0;
         }
