@@ -18,7 +18,7 @@ namespace EpubProcess
     {
         private static readonly (string key, string value)[] ReplaceReg = new[]
         {
-            ("石<img src=\"../images/cha.jpg\" */>","石圶"),
+            ("石<img src=\"../images/cha.jpg\" */>","石杢"),
         };
 
         public override async Task<int> ParseAsync(EpubBook epub)

@@ -24,8 +24,8 @@ namespace EpubProcess
                 new FileStream(outPath, FileMode.Create));
             var watch = new Stopwatch();
 
-            //EpubParse epubParse = new();
-            //await epubParse.ParseAsync(epub);
+            EpubParse epubParse = new();
+            await epubParse.ParseAsync(epub);
 
             var files = Directory.GetFiles($".{Path.DirectorySeparatorChar}Script").ToArray();
             Array.Sort(files);
