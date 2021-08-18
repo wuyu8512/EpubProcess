@@ -119,7 +119,7 @@ namespace EpubProcess
             // 处理黑白图片
             foreach (var imgNode in doc.QuerySelectorAll("p img"))
             {
-                if (imgNode.ParentElement is IHtmlParagraphElement && imgNode.ParentElement.ChildElementCount == 1 && imgNode.ParentElement.GetInnerText().IsEmpty())
+                if (imgNode.ParentElement is IHtmlParagraphElement && imgNode.ParentElement.ChildElementCount == 1 && imgNode.ParentElement.TextContent.IsEmpty())
                 {
                     var src = imgNode.GetAttribute("src");
 
@@ -163,8 +163,8 @@ namespace EpubProcess
         // 处理特殊样式
         private void ProcessClass(IHtmlDocument doc)
         {
-            doc.QuerySelectorAll("span.tcy").ForEach(span => span.OuterHtml = span.GetInnerText().Trim(EmptyChar));
-            doc.QuerySelectorAll("span.sideways").ForEach(span => span.OuterHtml = span.GetInnerText().Trim(EmptyChar));
+            doc.QuerySelectorAll("span.tcy").ForEach(span => span.OuterHtml = span.TextContent.Trim(EmptyChar));
+            doc.QuerySelectorAll("span.sideways").ForEach(span => span.OuterHtml = span.TextContent.Trim(EmptyChar));
         }
 
         private async Task ProcessNav(EpubBook epub)
@@ -216,7 +216,7 @@ namespace EpubProcess
 
                 foreach (var pNode in doc.QuerySelectorAll("p").Take(10))
                 {
-                    if (pNode.GetInnerText().Trim(EmptyChar) == item.Title)
+                    if (pNode.TextContent.Trim(EmptyChar) == item.Title)
                     {
                         RemoveEmptyParagraphElement(pNode.NextElementSibling);
                         if (pNode.OuterHtml.IndexOf(item.Title) > -1) pNode.OuterHtml = $"<h4>{item.Title}</h4>";

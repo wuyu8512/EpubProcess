@@ -15,7 +15,7 @@ namespace EpubProcess
 
         public static bool IsEmpty(this IElement element)
         {
-            if (element.ChildElementCount == 0 && element.GetInnerText().IsEmpty()) return true;
+            if (element.ChildElementCount == 0 && element.TextContent.IsEmpty()) return true;
             else if (element.ChildElementCount == 1 && element.FirstElementChild is IHtmlBreakRowElement) return true;
             return false;
         }
