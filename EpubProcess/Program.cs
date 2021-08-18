@@ -1,4 +1,5 @@
 ﻿using EpubProcess.Process;
+using Python.Runtime;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -17,6 +18,9 @@ namespace EpubProcess
             var epub = EpubBook.ReadEpub(new FileStream(epubPath, FileMode.Open),
                 new FileStream(outPath, FileMode.Create));
             var watch = new Stopwatch();
+
+            Runtime.PythonDLL = "python39.dll";
+            PythonEngine.DebugGIL = true;
 
             var files = Directory.GetFiles($".{Path.DirectorySeparatorChar}Script").ToArray();
             Array.Sort(files);
@@ -50,6 +54,7 @@ namespace EpubProcess
             }
 
             epub.Dispose();
+            System.Environment.Exit(0);
         }
     }
 }

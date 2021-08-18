@@ -2,7 +2,7 @@
   "profiles": {
     "EpubProcess": {
       "commandName": "Project",
-      "commandLineArgs": "\"D:\\测试\\腦漿炸裂Girl (1).epub\""
+      "commandLineArgs": "\"F:\\轻小说\\测试\\腦漿炸裂Girl (1).epub\""
     }
   }
 }
