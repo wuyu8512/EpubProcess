@@ -171,8 +171,8 @@ namespace EpubProcess
         // 处理特殊样式
         private void ProcessClass(IHtmlDocument doc)
         {
-            doc.QuerySelectorAll("span.tcy").ForEach(span => span.OuterHtml = span.TextContent.Trim(EmptyChar));
-            doc.QuerySelectorAll("span.sideways").ForEach(span => span.OuterHtml = span.TextContent.Trim(EmptyChar));
+            doc.QuerySelectorAll("span.tcy").ForEach(span => span.OuterHtml = span.InnerHtml);
+            doc.QuerySelectorAll("span.sideways").ForEach(span => span.OuterHtml = span.InnerHtml);
         }
 
         private async Task ProcessNav(EpubBook epub)

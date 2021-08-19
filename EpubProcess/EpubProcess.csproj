@@ -14,6 +14,7 @@
     <PackageReference Include="AngleSharp.Io" Version="0.16.0" />
     <PackageReference Include="AngleSharp.Js" Version="0.15.0" />
     <PackageReference Include="AngleSharp.Wasm" Version="0.13.0" />
+    <PackageReference Include="Jint" Version="2.11.58" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
     <PackageReference Include="pythonnet" Version="3.0.0-preview2021-08-03" />
   </ItemGroup>
@@ -41,7 +42,7 @@
     <Compile Update="Script\4.书源解析.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
-    <Compile Update="Script\其他样例\文学少女.cs">
+    <Compile Update="Script\文学少女.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
   </ItemGroup>

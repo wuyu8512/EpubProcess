@@ -36,12 +36,15 @@ namespace EpubProcess
         private static readonly (string key, string value)[] ReplaceString = new[]
         {
             ("align-end","right"),
+            ("em-dot","dot"),
             ("――","——"),
         };
 
         private static readonly (string key, string value)[] ReplaceReg = new[]
         {
+            ("<p>[　 ]+</p>","<p><br/></p>"),
             ("<p>[　 ]+","<p>"),
+            ("[　 ]+</p>","</p>"),
             ("──|－－|—— | ——|――","——"),
             (@"\.\.\.\.\.\.|⋯⋯","……"),
             ("~|∼|〜","～"),

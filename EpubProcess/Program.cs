@@ -21,7 +21,7 @@ namespace EpubProcess
             Console.OutputEncoding = new System.Text.UTF8Encoding(false);
 
             var epubPath = args[0];
-            var outPath = epubPath.Replace(Path.GetExtension(epubPath), string.Empty) + "_out.epub";
+            var outPath = epubPath.Replace(Path.GetExtension(epubPath), string.Empty) + "_Process.epub";
             var epub = EpubBook.ReadEpub(new FileStream(epubPath, FileMode.Open),
                 new FileStream(outPath, FileMode.Create));
             var watch = new Stopwatch();
