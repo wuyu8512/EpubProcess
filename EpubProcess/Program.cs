@@ -19,6 +19,7 @@ namespace EpubProcess
         static async Task Main(string[] args)
         {
             Console.OutputEncoding = new System.Text.UTF8Encoding(false);
+
             var epubPath = args[0];
             var outPath = epubPath.Replace(Path.GetExtension(epubPath), string.Empty) + "_out.epub";
             var epub = EpubBook.ReadEpub(new FileStream(epubPath, FileMode.Open),
@@ -26,6 +27,7 @@ namespace EpubProcess
             var watch = new Stopwatch();
 
             //EpubParse epubParse = new();
+            //await epubParse.ParseAsync(epub);
             //await epubParse.ParseAsync(epub);
 
             var files = Directory.GetFiles($".{Path.DirectorySeparatorChar}Script").ToArray();

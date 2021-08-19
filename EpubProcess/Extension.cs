@@ -10,7 +10,7 @@ namespace EpubProcess
     {
         public static string ToXhtml(this IMarkupFormattable markupFormattable)
         {
-            return markupFormattable.ToHtml(AngleSharp.Xhtml.XhtmlMarkupFormatter.Instance);
+            return markupFormattable.ToHtml(EpubXhtmlMarkupFormatter.Instance);
         }
 
         public static bool IsEmpty(this IElement element)

@@ -17,7 +17,7 @@ namespace EpubProcess
     {
         private static readonly IConfiguration Config = Configuration.Default.WithCss().WithJs();
         private static readonly IBrowsingContext Context = BrowsingContext.New(Config);
-        private static readonly HtmlParser HtmlParser = new(new HtmlParserOptions(), Context);
+        private static readonly IHtmlParser HtmlParser = Context.GetService<IHtmlParser>();
 
         private static readonly char[] EmptyChar = new[] { ' ', '\r', '\n', '\t', '　' };
 
@@ -48,15 +48,15 @@ namespace EpubProcess
                 using var streamReader = new StreamReader(stream);
                 var content = await streamReader.ReadToEndAsync();
 
-                var doc = await HtmlParser.ParseDocumentAsync(content);
+                var doc = HtmlParser.ParseDocument(content);
 
                 ProcessImage(doc);
                 RemoveEmptyParagraphElement(doc);
                 ProcessClass(doc);
 
+                stream.SetLength(0);
                 await using var streamWrite = new StreamWriter(stream);
-                streamWrite.BaseStream.SetLength(0);
-                doc.ToHtml(streamWrite, XhtmlMarkupFormatter.Instance);
+                await streamWrite.WriteAsync(doc.ToXhtml());
             }
 
             await ProcessCover(epub); // 必须在图片处理完之后运行
@@ -149,8 +149,16 @@ namespace EpubProcess
             {
                 var doc = await HtmlParser.ParseDocumentAsync(epub.GetItemContentByID(epub.GetItemByHref(html.Href).ID));
                 var img = (IHtmlImageElement)doc.QuerySelector("img");
-                var src = img.GetAttribute("src");
-                id = epub.GetItemByHref(Util.ZipResolvePath(Path.GetDirectoryName(html.Href), src)).ID;
+                if (img != null)
+                {
+                    var src = img.GetAttribute("src");
+                    id = epub.GetItemByHref(Util.ZipResolvePath(Path.GetDirectoryName(html.Href), src)).ID;
+                }
+                else
+                {
+                    Console.WriteLine("本epub无法找到封面图片，跳过封面处理");
+                    return;
+                }
             }
             else
             {
@@ -219,7 +227,7 @@ namespace EpubProcess
                     if (pNode.TextContent.Trim(EmptyChar) == item.Title)
                     {
                         RemoveEmptyParagraphElement(pNode.NextElementSibling);
-                        if (pNode.OuterHtml.IndexOf(item.Title) > -1) pNode.OuterHtml = $"<h4>{item.Title}</h4>";
+                        if (pNode.OuterHtml.Contains(item.Title)) pNode.OuterHtml = $"<h4>{item.Title}</h4>";
                         else pNode.OuterHtml = $"<h4>{pNode.InnerHtml}</h4>";
                         break;
                     }
