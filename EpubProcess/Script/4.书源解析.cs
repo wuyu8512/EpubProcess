@@ -317,18 +317,32 @@ namespace EpubProcess
                 var converNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
                 if (converNav != null)
                 {
-                    var messageNav = new NavItem { Href = "Text/message.xhtml", Title = "製作信息" };
+                    var messageNav = new NavItem
+                    {
+                        Href = Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), "Text/message.xhtml"),
+                        Title = "製作信息"
+                    };
                     converNav.BaseElement.AddAfterSelf(messageNav.BaseElement);
 
                     // 设置彩页
-                    var id = epub.Package.Spine[converIndex + 2].IdRef;
-                    var href = epub.GetEntryName(id);
-                    var illusNav = new NavItem { Href = href, Title = "彩頁" };
-                    messageNav.BaseElement.AddAfterSelf(illusNav.BaseElement);
-                    return;
+                    if (!epub.Nav.Any(x => x.Title.StartsWith("彩頁")))
+                    {
+                        var id = epub.Package.Spine[converIndex + 2].IdRef;
+                        var href = epub.GetEntryName(id);
+                        var illusNav = new NavItem { Href = Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), href), Title = "彩頁" };
+                        messageNav.BaseElement.AddAfterSelf(illusNav.BaseElement);
+                        return;
+                    }
+                    else
+                    {
+                        Console.WriteLine("目录中似乎已经有彩页了，跳过彩页处理");
+                    }
                 }
             }
-            Console.WriteLine("没有找到名为封面的目录，跳过制作信息和彩页处理");
+            else
+            {
+                Console.WriteLine("没有找到目录，跳过制作信息和彩页处理");
+            }
         }
     }
 }

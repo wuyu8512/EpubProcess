@@ -13,6 +13,7 @@ namespace EpubProces
         private static readonly (string key, string value)[] ReplaceString = new[]
         {
             ("腦漿炸裂Girl","ちゃつぽ"), // 左边书名 右边插画师名称
+            ("愛戀插話集","竹岡美穗"),
         };
 
         public override async Task<int> ParseAsync(EpubBook epub)
