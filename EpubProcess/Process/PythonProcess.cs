@@ -12,12 +12,11 @@ namespace EpubProcess.Process
     class PythonProcess : BaseProcess
     {
         public override string[] Extension => new[] { ".py" };
-
-        public PythonProcess()
+        public Lazy<string> version = new(() =>
         {
             var cmd = new System.Diagnostics.Process
             {
-                StartInfo = {FileName = "python", RedirectStandardOutput = true, Arguments = " -V"}
+                StartInfo = { FileName = "python", RedirectStandardOutput = true, Arguments = " -V" }
             };
             cmd.Start();
             cmd.WaitForExit();
@@ -35,11 +34,13 @@ namespace EpubProcess.Process
             {
                 ver = "libpython" + string.Join(string.Empty, ver.Split(".").Take(2)) + ".so";
             }
-            Runtime.PythonDLL = ver;
-        }
+            return ver;
+        });
 
         public override async Task<int> ExecuteAsync(string script, EpubBook epub)
         {
+            Runtime.PythonDLL = version.Value;
+
             await Task.Run(() =>
             {
                 PythonEngine.Initialize();

@@ -37,7 +37,7 @@ namespace EpubProcess.Process
 
                 await using var streamWrite = new StreamWriter(stream);
                 streamWrite.BaseStream.SetLength(0);
-                document.ToHtml(streamWrite, new XhtmlMarkupFormatter());
+                await streamWrite.WriteAsync(document.ToXhtml());
             }
 
             return 0;
