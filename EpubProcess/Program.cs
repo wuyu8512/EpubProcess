@@ -18,7 +18,8 @@ namespace EpubProcess
 
         static async Task Main(string[] args)
         {
-            Console.OutputEncoding = new System.Text.UTF8Encoding(false);
+            //var encoding = Console.OutputEncoding;
+            //Console.OutputEncoding = new System.Text.UTF8Encoding(false);
 
             var epubPath = args[0];
             var outPath = epubPath.Replace(Path.GetExtension(epubPath), string.Empty) + "_Process.epub";
@@ -64,6 +65,7 @@ namespace EpubProcess
             }
 
             epub.Dispose();
+            //Console.OutputEncoding = encoding;
         }
     }
 }

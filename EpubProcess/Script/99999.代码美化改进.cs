@@ -19,7 +19,7 @@ namespace EpubProcess
             var browsingContext = BrowsingContext.New(Config);
             var _htmlParser = new HtmlParser(new HtmlParserOptions(), browsingContext);
 
-            var xhtmlTemplate = await File.ReadAllTextAsync("./Script/Res/html.txt");
+            var xhtmlTemplate = await File.ReadAllTextAsync("./Script/Res/content.html");
 
             foreach (var id in epub.GetTextIDs())
             {
@@ -46,12 +46,11 @@ namespace EpubProcess
             if (nav != null)
             {
                 var content = epub.Nav.BaseElement.Document.ToString();
-
                 var doc = await _htmlParser.ParseDocumentAsync(content);
                 var body = doc.Body.ChildNodes.ToXhtml();
-                var html = string.Format(xhtmlTemplate, doc.Title, body);
-                XDocument xDocument = XDocument.Parse(html);
+                var html = string.Format(await File.ReadAllTextAsync("./Script/Res/nav.html"), doc.Title, body);
 
+                XDocument xDocument = XDocument.Parse(html);
                 await epub.SetItemContentByIDAsync(nav.ID, xDocument.ToString());
                 epub.UpDataNav();
             }

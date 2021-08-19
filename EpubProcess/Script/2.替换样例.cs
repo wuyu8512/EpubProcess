@@ -36,6 +36,7 @@ namespace EpubProcess
         private static readonly (string key, string value)[] ReplaceString = new[]
         {
             ("align-end","right"),
+            ("書封","封面"),
             ("em-dot","dot"),
             ("――","——"),
         };

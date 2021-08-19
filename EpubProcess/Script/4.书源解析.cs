@@ -63,6 +63,7 @@ namespace EpubProcess
             await ProcessCover(epub); // 必须在图片处理完之后运行
             await ProcessNav(epub);
             await ProcessTitle(epub);
+            await AddMessage(epub);
 
             return 0;
         }
@@ -174,6 +175,11 @@ namespace EpubProcess
         {
             doc.QuerySelectorAll("span.tcy").ForEach(span => span.OuterHtml = span.InnerHtml);
             doc.QuerySelectorAll("span.sideways").ForEach(span => span.OuterHtml = span.InnerHtml);
+            doc.QuerySelectorAll(".gfont").ForEach(span => 
+            {
+                span.ClassList.Remove("gfont");
+                if (span.ClassList.Length == 0) span.RemoveAttribute("class");
+            });
         }
 
         private async Task ProcessNav(EpubBook epub)
@@ -273,9 +279,51 @@ namespace EpubProcess
                 .ToArray()
                 .ForEach(c => c.Remove());
 
-            if (string.IsNullOrEmpty(epub.Author)) epub.Author = epub.Creator;
+            var author = epub.Author;
+            if (string.IsNullOrEmpty(author)) author = epub.Creator;
+            epub.Package.Metadata.BaseElement.Elements(EpubBook.DcNs + "creator").ToArray().ForEach(c => c.Remove());
+            epub.Author = author;
             epub.Creator = "无语";
             if (!string.IsNullOrEmpty(cover)) epub.Cover = cover;
+        }
+
+        // 在封面后面添加制作信息和设置彩页目录，并尝试删除自带的Logo页
+        private async Task AddMessage(EpubBook epub)
+        {
+            var title = epub.Package.Manifest.FirstOrDefault(x => x.Href.Contains("p-titlepage.xhtml"));
+            if (title != null)
+            {
+                var content = await epub.GetItemContentByIDAsync(title.ID);
+                if (content.Contains("logo-title.jpg")) epub.DeleteItem(title.ID);
+            }
+
+            // 添加制作信息
+            var message = await File.ReadAllTextAsync("Script/Res/message.xhtml");
+            epub.AddItem(new EpubItem
+            {
+                Data = Encoding.UTF8.GetBytes(string.Format(message, epub.Author, "{0}")), // 此处填写插画师，在插画师处理插件中补全
+                EntryName = "Text/message.xhtml",
+                ID = "message.xhtml"
+            });
+            var spine = epub.Package.Spine.FirstOrDefault(c => c.IdRef == "message.xhtml");
+            var cover = epub.GetCoverXhtml();
+            var coverSpine = epub.Package.Spine.FirstOrDefault(c => c.IdRef == cover.ID);
+            var converIndex = epub.Package.Spine.IndexOf(coverSpine);
+            epub.Package.Spine.Remove(spine);
+            epub.Package.Spine.Insert(converIndex + 1, spine);
+            var nav = epub.GetNav();
+            if (nav != null)
+            {
+                var converNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
+                var messageNav = new NavItem { Href = "Text/message.xhtml", Title = "制作信息" };
+                converNav.BaseElement.AddAfterSelf(messageNav.BaseElement);
+
+                // 设置彩页
+                var id = epub.Package.Spine[converIndex + 2].IdRef;
+                var href = epub.GetEntryName(id);
+                var illusNav = new NavItem { Href = href, Title = "彩页" };
+                messageNav.BaseElement.AddAfterSelf(illusNav.BaseElement);
+            }
         }
     }
 }
