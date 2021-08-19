@@ -17,7 +17,7 @@ namespace EpubProcess
         {
             foreach (var id in epub.GetTextIDs())
             {
-                var stream = epub.GetItemByID(id);
+                var stream = epub.GetItemStreamByID(id);
                 using var streamReader = new StreamReader(stream, Encoding.UTF8);
                 var content = await streamReader.ReadToEndAsync();
 

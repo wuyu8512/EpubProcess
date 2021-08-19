@@ -20,7 +20,7 @@ namespace EpubProcess
             var watch = new Stopwatch();
 
             Runtime.PythonDLL = "python39.dll";
-            PythonEngine.DebugGIL = true;
+            //PythonEngine.Initialize();
 
             var files = Directory.GetFiles($".{Path.DirectorySeparatorChar}Script").ToArray();
             Array.Sort(files);
@@ -54,7 +54,7 @@ namespace EpubProcess
             }
 
             epub.Dispose();
-            System.Environment.Exit(0);
+            //PythonEngine.Shutdown();
         }
     }
 }
