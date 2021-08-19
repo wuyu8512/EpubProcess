@@ -265,7 +265,7 @@ namespace EpubProcess
             epub.Package.BaseElement.Attribute("prefix")?.Remove();
             epub.Package.BaseElement.Attribute("unique-identifier")?.SetValue("BookId");
 
-            epub.Package.Spine.BaseElement.RemoveAttributes();
+            epub.Package.Spine.BaseElement.Attribute("page-progression-direction")?.Remove();
             epub.Package.Spine.ToArray().ForEach(item => item.BaseElement.Attribute("properties")?.Remove());
             foreach (var item in epub.Package.Manifest)
             {
@@ -315,15 +315,20 @@ namespace EpubProcess
             if (nav != null)
             {
                 var converNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
-                var messageNav = new NavItem { Href = "Text/message.xhtml", Title = "制作信息" };
-                converNav.BaseElement.AddAfterSelf(messageNav.BaseElement);
+                if (converNav != null)
+                {
+                    var messageNav = new NavItem { Href = "Text/message.xhtml", Title = "製作信息" };
+                    converNav.BaseElement.AddAfterSelf(messageNav.BaseElement);
 
-                // 设置彩页
-                var id = epub.Package.Spine[converIndex + 2].IdRef;
-                var href = epub.GetEntryName(id);
-                var illusNav = new NavItem { Href = href, Title = "彩页" };
-                messageNav.BaseElement.AddAfterSelf(illusNav.BaseElement);
+                    // 设置彩页
+                    var id = epub.Package.Spine[converIndex + 2].IdRef;
+                    var href = epub.GetEntryName(id);
+                    var illusNav = new NavItem { Href = href, Title = "彩頁" };
+                    messageNav.BaseElement.AddAfterSelf(illusNav.BaseElement);
+                    return;
+                }
             }
+            Console.WriteLine("没有找到名为封面的目录，跳过制作信息和彩页处理");
         }
     }
 }
