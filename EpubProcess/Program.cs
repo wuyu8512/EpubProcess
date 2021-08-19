@@ -18,14 +18,15 @@ namespace EpubProcess
 
         static async Task Main(string[] args)
         {
+            Console.OutputEncoding = new System.Text.UTF8Encoding(false);
             var epubPath = args[0];
             var outPath = epubPath.Replace(Path.GetExtension(epubPath), string.Empty) + "_out.epub";
             var epub = EpubBook.ReadEpub(new FileStream(epubPath, FileMode.Open),
                 new FileStream(outPath, FileMode.Create));
             var watch = new Stopwatch();
 
-            EpubParse epubParse = new();
-            await epubParse.ParseAsync(epub);
+            //EpubParse epubParse = new();
+            //await epubParse.ParseAsync(epub);
 
             var files = Directory.GetFiles($".{Path.DirectorySeparatorChar}Script").ToArray();
             Array.Sort(files);
