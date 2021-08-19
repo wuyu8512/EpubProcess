@@ -59,6 +59,7 @@ namespace EpubProcess
                 await streamWrite.WriteAsync(doc.ToXhtml());
             }
 
+            ProcessPackage(epub);
             await ProcessCover(epub); // 必须在图片处理完之后运行
             await ProcessNav(epub);
             await ProcessTitle(epub);
@@ -205,6 +206,15 @@ namespace EpubProcess
 
         private async Task ProcessTitle(EpubBook epub)
         {
+            // 为了兼容某些书章节名和目录名部分符号不同
+            string strProcess(string str)
+            {
+                str = str.Replace("\u3000", string.Empty);
+                str = str.Replace(" ", string.Empty);
+                str = str.Replace("：", string.Empty);
+                return str.Trim(EmptyChar);
+            };
+
             var nav = epub.GetNav();
             if (nav == null)
             {
@@ -224,7 +234,11 @@ namespace EpubProcess
 
                 foreach (var pNode in doc.QuerySelectorAll("p").Take(10))
                 {
-                    if (pNode.TextContent.Trim(EmptyChar) == item.Title)
+                    // 为了兼容某些书章节名带注音
+                    var node = (IElement)pNode.Clone();
+                    node.QuerySelectorAll("rt").ToArray().ForEach(c => c.Remove());
+
+                    if (strProcess(node.TextContent) == strProcess(item.Title))
                     {
                         RemoveEmptyParagraphElement(pNode.NextElementSibling);
                         if (pNode.OuterHtml.Contains(item.Title)) pNode.OuterHtml = $"<h4>{item.Title}</h4>";
@@ -235,6 +249,33 @@ namespace EpubProcess
 
                 await epub.SetItemContentByIDAsync(id, doc.ToXhtml());
             }
+        }
+
+        private void ProcessPackage(EpubBook epub)
+        {
+            var cover = epub.Cover;
+
+            // 删除没用的属性
+            epub.Package.BaseElement.Attribute("prefix")?.Remove();
+            epub.Package.BaseElement.Attribute("unique-identifier")?.SetValue("BookId");
+
+            epub.Package.Spine.BaseElement.RemoveAttributes();
+            epub.Package.Spine.ToArray().ForEach(item => item.BaseElement.Attribute("properties")?.Remove());
+            foreach (var item in epub.Package.Manifest)
+            {
+                if (item.IsCover || item.IsNav) continue;
+                item.BaseElement.Attribute("properties")?.Remove();
+            }
+            epub.Package.Metadata.BaseElement.Elements(EpubBook.OpfNs + "meta").ToArray().ForEach(c => c.Remove());
+
+            epub.Package.Metadata.BaseElement.Elements()
+                .Where(c => new[] { "bw-ecode", "publisher" }.Contains(c.Attribute("id")?.Value))
+                .ToArray()
+                .ForEach(c => c.Remove());
+
+            if (string.IsNullOrEmpty(epub.Author)) epub.Author = epub.Creator;
+            epub.Creator = "无语";
+            if (!string.IsNullOrEmpty(cover)) epub.Cover = cover;
         }
     }
 }
