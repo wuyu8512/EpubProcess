@@ -40,6 +40,8 @@ namespace EpubProcess
             ("書封","封面"),
             ("em-dot","dot"),
             ("――","——"),
+            ("後　記","後記"),
+            ("目　錄","目錄"),
         };
 
         private static readonly (string key, string value)[] ReplaceReg = new[]

@@ -14,6 +14,8 @@ namespace EpubProces
         {
             ("腦漿炸裂Girl","ちゃつぽ"), // 左边书名 右边插画师名称
             ("愛戀插話集","竹岡美穗"),
+            ("岸邊露伴完全不嬉鬧","荒木飛呂彥"),
+            ("墮神契文","竹官@CIMIX BARZ"),
         };
 
         public override async Task<int> ParseAsync(EpubBook epub)

@@ -11,6 +11,9 @@ using System.Xml.Linq;
 
 namespace EpubProcess
 {
+    /// <summary>
+    /// 负责格式化代码
+    /// </summary>
     class EpubFormat : Script
     {
         public override async Task<int> ParseAsync(EpubBook epub)
@@ -23,7 +26,7 @@ namespace EpubProcess
 
             foreach (var id in epub.GetTextIDs())
             {
-                var stream = epub.GetItemStreamByID(id);
+                var stream = epub.GetItemStreamByID(id, out var href);
                 using var streamReader = new StreamReader(stream);
                 var content = await streamReader.ReadToEndAsync();
 
@@ -35,6 +38,7 @@ namespace EpubProcess
                 var html = string.Format(xhtmlTemplate, doc.Title, body);
 
                 XDocument xDocument = XDocument.Parse(html);
+                // TODO Style改进
 
                 stream.SetLength(0);
                 stream.Position = 0;

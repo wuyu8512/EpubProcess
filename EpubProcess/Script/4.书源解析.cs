@@ -23,9 +23,9 @@ namespace EpubProcess
 
         public override async Task<int> ParseAsync(EpubBook epub)
         {
+            // 删掉js和json，居然还有这两种文件????
             // 删掉所有的Style文件，用默认的替换，此处必须ToArray，否则会遇到多次迭代问题
-            epub.GetItems(new[] { ".css" }).ToArray().ForEach(item => epub.DeleteItem(item.ID));
-
+            epub.GetItems(new[] { ".css",".js",".json" }).ToArray().ForEach(item => epub.DeleteItem(item.ID));
             epub.AddItem(new EpubItem
             {
                 EntryName = "Styles/style.css",
@@ -119,9 +119,10 @@ namespace EpubProcess
                 svg.OuterHtml = div.ToXhtml();
             }
             // 处理黑白图片
-            foreach (var imgNode in doc.QuerySelectorAll("p img"))
+            foreach (var imgNode in doc.QuerySelectorAll("p img ,div img:first-child"))
             {
-                if (imgNode.ParentElement is IHtmlParagraphElement && imgNode.ParentElement.ChildElementCount == 1 && imgNode.ParentElement.TextContent.IsEmpty())
+                // 无法很好的处理所有情况，需要后续观察
+                if ((imgNode.ParentElement is IHtmlParagraphElement || imgNode.ParentElement is IHtmlDivElement) &&  imgNode.ParentElement.TextContent.IsEmpty())
                 {
                     var src = imgNode.GetAttribute("src");
 
@@ -154,6 +155,9 @@ namespace EpubProcess
                 if (img != null)
                 {
                     var src = img.GetAttribute("src");
+                    Console.WriteLine(html.Href);
+                    Console.WriteLine(src);
+
                     id = epub.GetItemByHref(Util.ZipResolvePath(Path.GetDirectoryName(html.Href), src)).ID;
                 }
                 else
@@ -175,10 +179,34 @@ namespace EpubProcess
         {
             doc.QuerySelectorAll("span.tcy").ForEach(span => span.OuterHtml = span.InnerHtml);
             doc.QuerySelectorAll("span.sideways").ForEach(span => span.OuterHtml = span.InnerHtml);
-            doc.QuerySelectorAll(".gfont").ForEach(span => 
+            doc.QuerySelectorAll(".gfont").ForEach(span =>
             {
                 span.ClassList.Remove("gfont");
                 if (span.ClassList.Length == 0) span.RemoveAttribute("class");
+            });
+            doc.QuerySelectorAll("span.font-1em10").ForEach(span =>
+            {
+                span.ClassList.Remove("font-1em10");
+                if (span.ClassList.Length == 0 && span.ParentElement is IHtmlParagraphElement pNode && pNode.TextContent == span.TextContent)
+                {
+                    pNode.InnerHtml = span.TextContent;
+                    pNode.ClassList.Add("em11");
+                }
+                else
+                {
+                    span.ClassList.Add("em11");
+                }
+            });
+            doc.QuerySelectorAll("div.x---, div.imgc").ToArray().ForEach(div =>
+            {
+                // 疑似书(墮神契文)独有
+                if (!div.HasChildNodes)
+                {
+                    div.Remove();
+                    return;
+                }
+                div.RemoveAttribute("class");
+                div.RemoveAttribute("xmlns");
             });
         }
 
@@ -190,8 +218,8 @@ namespace EpubProcess
                 Console.WriteLine("本epub无法找到目录，跳过目录处理");
                 return;
             }
-            var last = epub.Nav.Last();
-            if (last.Title == "版權頁")
+            var last = epub.Nav.FirstOrDefault(c=>c.Title == "版權頁");
+            if (last != null)
             {
                 var basePath = Path.GetDirectoryName(nav.Href);
                 var id = epub.GetItemByHref(Util.ZipResolvePath(basePath, last.Href.Split('#')[0])).ID;
@@ -208,6 +236,10 @@ namespace EpubProcess
                 epub.DeleteItem(id);
                 last.Remove();
             }
+            // 假如Nav和Spine文件包含自身，则删除
+            var fileName = Path.GetFileName(nav.Href);
+            epub.Nav.FirstOrDefault(c => c.Href == fileName)?.Remove();
+            epub.Package.Spine.FirstOrDefault(c => c.IdRef == nav.ID)?.Remove();
         }
 
         private async Task ProcessTitle(EpubBook epub)
@@ -238,7 +270,11 @@ namespace EpubProcess
                 var doc = await HtmlParser.ParseDocumentAsync(content);
                 doc.Title = item.Title;
 
-                foreach (var pNode in doc.QuerySelectorAll("p").Take(10))
+                IHtmlCollection<IElement> iter;
+                if (doc.Body.FirstElementChild.ChildElementCount > 3) iter = doc.Body.FirstElementChild.Children;
+                else iter = doc.QuerySelectorAll("p");
+
+                foreach (var pNode in iter.Take(10))
                 {
                     // 为了兼容某些书章节名带注音
                     var node = (IElement)pNode.Clone();
@@ -307,6 +343,20 @@ namespace EpubProcess
             });
             var spine = epub.Package.Spine.FirstOrDefault(c => c.IdRef == "message.xhtml");
             var cover = epub.GetCoverXhtml();
+            if (cover == null)
+            {
+                var coverNav = epub.Nav.FirstOrDefault(c => c.Title == "封面");
+                if (coverNav != null)
+                {
+                    var converHref = Util.ZipResolvePath(Path.GetDirectoryName(epub.GetNav().Href), coverNav.Href);
+                    cover = epub.Package.Manifest.FirstOrDefault(x => x.Href == converHref);
+                }
+                if (cover == null)
+                {
+                    Console.WriteLine("没有找到封面页，跳过制作信息和彩页处理");
+                    return;
+                }
+            }
             var coverSpine = epub.Package.Spine.FirstOrDefault(c => c.IdRef == cover.ID);
             var converIndex = epub.Package.Spine.IndexOf(coverSpine);
             epub.Package.Spine.Remove(spine);
