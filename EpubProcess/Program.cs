@@ -26,6 +26,8 @@ namespace EpubProcess
             var epub = EpubBook.ReadEpub(new FileStream(epubPath, FileMode.Open),
                 new FileStream(outPath, FileMode.Create));
             var watch = new Stopwatch();
+            var gWatch = new Stopwatch();
+            gWatch.Start();
 
             //EpubParse epubParse = new();
             //await epubParse.ParseAsync(epub);
@@ -65,6 +67,7 @@ namespace EpubProcess
             }
 
             epub.Dispose();
+            Console.WriteLine("\r\n所有脚本运行完毕，用时{0}毫秒", gWatch.ElapsedMilliseconds);
             //Console.OutputEncoding = encoding;
         }
     }

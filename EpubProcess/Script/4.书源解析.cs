@@ -1,15 +1,15 @@
 ﻿using AngleSharp;
+using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
-using AngleSharp.Xhtml;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Wuyu.Epub;
-using System.Text.RegularExpressions;
-using AngleSharp.Dom;
 
 namespace EpubProcess
 {
@@ -63,7 +63,7 @@ namespace EpubProcess
             await ProcessCover(epub); // 必须在图片处理完之后运行
             await ProcessNav(epub);
             await ProcessTitle(epub);
-            await AddMessage(epub);
+            await AddMessageAndIllus(epub);
 
             return 0;
         }
@@ -100,7 +100,7 @@ namespace EpubProcess
         }
 
         // 图片处理
-        private void ProcessImage(IHtmlDocument doc)
+        private static void ProcessImage(IHtmlDocument doc)
         {
             // 处理彩页图片
             foreach (var svg in doc.QuerySelectorAll("svg"))
@@ -139,7 +139,8 @@ namespace EpubProcess
             }
         }
 
-        private async Task ProcessCover(EpubBook epub)
+        // 尝试处理封面html文件
+        private static async Task ProcessCover(EpubBook epub)
         {
             var html = epub.GetCoverXhtml();
             if (html == null && epub.Cover.IsEmpty())
@@ -155,9 +156,6 @@ namespace EpubProcess
                 if (img != null)
                 {
                     var src = img.GetAttribute("src");
-                    Console.WriteLine(html.Href);
-                    Console.WriteLine(src);
-
                     id = epub.GetItemByHref(Util.ZipResolvePath(Path.GetDirectoryName(html.Href), src)).ID;
                 }
                 else
@@ -175,7 +173,7 @@ namespace EpubProcess
         }
 
         // 处理特殊样式
-        private void ProcessClass(IHtmlDocument doc)
+        private static void ProcessClass(IHtmlDocument doc)
         {
             doc.QuerySelectorAll("span.tcy").ForEach(span => span.OuterHtml = span.InnerHtml);
             doc.QuerySelectorAll("span.sideways").ForEach(span => span.OuterHtml = span.InnerHtml);
@@ -210,7 +208,8 @@ namespace EpubProcess
             });
         }
 
-        private async Task ProcessNav(EpubBook epub)
+        // 删除版权页，删除目录中的Nav，某些书书名页的位置和阅读顺序不相符，这里直接删掉
+        private static async Task ProcessNav(EpubBook epub)
         {
             var nav = epub.GetNav();
             if (nav == null)
@@ -240,9 +239,63 @@ namespace EpubProcess
             var fileName = Path.GetFileName(nav.Href);
             epub.Nav.FirstOrDefault(c => c.Href == fileName)?.Remove();
             epub.Package.Spine.FirstOrDefault(c => c.IdRef == nav.ID)?.Remove();
+            // 某些书书名页和目录页顺序不对，这里尝试调换
+            //var contentNav = epub.Nav.FirstOrDefault(x => x.Title == "目錄");
+            var smNav = epub.Nav.FirstOrDefault(x => x.Title == "書名頁");
+            //if (contentNav != null && smNav != null && contentNav.BaseElement.NextNode == smNav.BaseElement)
+            //{
+            //    var fullPath = Util.ZipResolvePath(Path.GetDirectoryName(nav.Href), contentNav.Href);
+            //    var contentItem = epub.Package.Manifest.FirstOrDefault(x => x.Href == fullPath);
+            //    var contentSpine = epub.Package.Spine.FirstOrDefault(x => x.IdRef == contentItem.ID);
+            //    var contentIndex = epub.Package.Spine.IndexOf(contentSpine);
+
+            //    var id = epub.Package.Spine[contentIndex - 1].IdRef;
+            //    var smItem = epub.Package.Manifest.FirstOrDefault(x => x.ID == id);
+            //    if (smItem.Href == Util.ZipResolvePath(Path.GetDirectoryName(nav.Href), smNav.Href))
+            //    {
+            //        Console.WriteLine("书名页和目录页顺序相反，开始调换位置");
+            //        System.Xml.Linq.XElement temp = new(contentNav.BaseElement);
+            //        contentNav.BaseElement.ReplaceWith(smNav.BaseElement);
+            //        smNav.BaseElement.ReplaceWith(temp);
+            //    }
+            //}
+            // 直接删除，不调换了
+            smNav?.Remove();
         }
 
-        private async Task ProcessTitle(EpubBook epub)
+        // 简单实现一个相似度算法
+        public static double Sim(string txt1, string txt2)
+        {
+            List<char> sl1 = txt1.ToCharArray().ToList();
+            List<char> sl2 = txt2.ToCharArray().ToList();
+            //去重
+            List<char> sl = sl1.Union(sl2).ToList<char>();
+
+            //获取重复次数
+            List<int> arrA = new List<int>();
+            List<int> arrB = new List<int>();
+            foreach (var str in sl)
+            {
+                arrA.Add(sl1.Where(x => x == str).Count());
+                arrB.Add(sl2.Where(x => x == str).Count());
+            }
+            //计算商
+            double num = 0;
+            //被除数
+            double numA = 0;
+            double numB = 0;
+            for (int i = 0; i < sl.Count; i++)
+            {
+                num += arrA[i] * arrB[i];
+                numA += Math.Pow(arrA[i], 2);
+                numB += Math.Pow(arrB[i], 2);
+            }
+            double cos = num / (Math.Sqrt(numA) * Math.Sqrt(numB));
+            return cos;
+        }
+
+        // 尝试从epub目录找到对应的正文，并改为h4标签
+        private static async Task ProcessTitle(EpubBook epub)
         {
             // 为了兼容某些书章节名和目录名部分符号不同
             string strProcess(string str)
@@ -274,13 +327,14 @@ namespace EpubProcess
                 if (doc.Body.FirstElementChild.ChildElementCount > 3) iter = doc.Body.FirstElementChild.Children;
                 else iter = doc.QuerySelectorAll("p");
 
-                foreach (var pNode in iter.Take(10))
+                foreach (var pNode in iter.Take(30))
                 {
                     // 为了兼容某些书章节名带注音
                     var node = (IElement)pNode.Clone();
                     node.QuerySelectorAll("rt").ToArray().ForEach(c => c.Remove());
-
-                    if (strProcess(node.TextContent) == strProcess(item.Title))
+                    // 有的书章节数字采用格式不同，这里使用一个简单的相似度，但有局限，需要看情况开启
+                    //if (strProcess(node.TextContent) == strProcess(item.Title))
+                    if (Sim(strProcess(node.TextContent), strProcess(item.Title)) > 0.7)
                     {
                         RemoveEmptyParagraphElement(pNode.NextElementSibling);
                         if (pNode.OuterHtml.Contains(item.Title)) pNode.OuterHtml = $"<h4>{item.Title}</h4>";
@@ -293,7 +347,8 @@ namespace EpubProcess
             }
         }
 
-        private void ProcessPackage(EpubBook epub)
+        // 清理元数据
+        private static void ProcessPackage(EpubBook epub)
         {
             var cover = epub.Cover;
 
@@ -318,13 +373,13 @@ namespace EpubProcess
             var author = epub.Author;
             if (string.IsNullOrEmpty(author)) author = epub.Creator;
             epub.Package.Metadata.BaseElement.Elements(EpubBook.DcNs + "creator").ToArray().ForEach(c => c.Remove());
-            epub.Author = author;
             epub.Creator = "无语";
+            epub.Author = author;
             if (!string.IsNullOrEmpty(cover)) epub.Cover = cover;
         }
 
         // 在封面后面添加制作信息和设置彩页目录，并尝试删除自带的Logo页
-        private async Task AddMessage(EpubBook epub)
+        private static async Task AddMessageAndIllus(EpubBook epub)
         {
             var title = epub.Package.Manifest.FirstOrDefault(x => x.Href.Contains("p-titlepage.xhtml"));
             if (title != null)
@@ -379,13 +434,33 @@ namespace EpubProcess
                     {
                         var id = epub.Package.Spine[converIndex + 2].IdRef;
                         var href = epub.GetEntryName(id);
-                        var illusNav = new NavItem { Href = Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), href), Title = "彩頁" };
-                        messageNav.BaseElement.AddAfterSelf(illusNav.BaseElement);
-                        return;
+                        if (!epub.Nav.Any(x=>x.Href == Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), href)))
+                        {
+                            var illusNav = new NavItem { Href = Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), href), Title = "彩頁" };
+                            messageNav.BaseElement.AddAfterSelf(illusNav.BaseElement);
+                            return;
+                        }
+                        else
+                        {
+                            Console.WriteLine("本书似乎没有彩页，跳过彩页处理");
+                        }
                     }
                     else
                     {
-                        Console.WriteLine("目录中似乎已经有彩页了，跳过彩页处理");
+                        var list = epub.Nav.Where(x => Regex.IsMatch(x.Title, "彩頁\\d+")).ToArray();
+                        if (list.Length > 1)
+                        {
+                            Console.WriteLine("目录中有多个彩页，删除多余的");
+                            list.ForEach(x =>
+                            {
+                                if (x.Title == "彩頁1") x.Title = "彩頁";
+                                else x.Remove();
+                            });
+                        }
+                        else
+                        {
+                            Console.WriteLine("目录中似乎已经有彩页了，跳过彩页处理");
+                        }
                     }
                 }
             }

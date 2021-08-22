@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EpubProcess", "EpubProcess\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wuyu.Epub", "..\EpubBook\Wuyu.Epub\Wuyu.Epub.csproj", "{C01883E6-E68D-404C-84B5-CC3395B1C36F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{189FDA11-E694-4B63-841D-0514BA0FE078}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{C01883E6-E68D-404C-84B5-CC3395B1C36F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C01883E6-E68D-404C-84B5-CC3395B1C36F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C01883E6-E68D-404C-84B5-CC3395B1C36F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{189FDA11-E694-4B63-841D-0514BA0FE078}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{189FDA11-E694-4B63-841D-0514BA0FE078}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{189FDA11-E694-4B63-841D-0514BA0FE078}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{189FDA11-E694-4B63-841D-0514BA0FE078}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
