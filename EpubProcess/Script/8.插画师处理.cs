@@ -18,6 +18,7 @@ namespace EpubProces
             ("御神樂學園組曲","明菜"),
             ("春日坂高中漫画研究社","ヤマコ"),
             ("排球少年","古舘春一"),
+            ("Life Alive","Yuugen"),
         };
 
         public override async Task<int> ParseAsync(EpubBook epub)

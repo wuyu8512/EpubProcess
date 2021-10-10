@@ -23,6 +23,7 @@ namespace EpubProcess
         private static readonly Dictionary<char, char> ReplaceCharDir = new[]
         {
             //('　',' '),
+            ('姊','姐'),
             ('~','～'),
             ('─','—'),
             ('╳','×'),
