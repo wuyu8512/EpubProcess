@@ -24,9 +24,28 @@ namespace EpubProcess
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
             var epubPath = args[0];
+            if (Directory.Exists(epubPath))
+            {
+                foreach (var path in Directory.GetFiles(epubPath))
+                {
+                    await Process(path);
+                }
+            }
+            else
+            {
+                await Process(epubPath);
+            }
+
+            //Console.OutputEncoding = encoding;
+        }
+
+        static async Task Process(string epubPath)
+        {
+            //Console.WriteLine(epubPath);
             var outPath = epubPath.Replace(Path.GetExtension(epubPath), string.Empty) + "_Process.epub";
             var epub = EpubBook.ReadEpub(new FileStream(epubPath, FileMode.Open),
                 new FileStream(outPath, FileMode.Create));
+            Console.WriteLine(epub.Title);
             var watch = new Stopwatch();
             var gWatch = new Stopwatch();
             gWatch.Start();
@@ -70,7 +89,6 @@ namespace EpubProcess
 
             epub.Dispose();
             Console.WriteLine("\r\n所有脚本运行完毕，用时{0}毫秒", gWatch.ElapsedMilliseconds);
-            //Console.OutputEncoding = encoding;
         }
     }
 }
