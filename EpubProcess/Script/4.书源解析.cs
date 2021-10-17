@@ -170,6 +170,13 @@ namespace EpubProcess
             }
 
             epub.CreateCoverXhtml(id);
+
+            var converNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
+            if (converNav == null)
+            {
+                Console.WriteLine("目录中似乎没有封面，尝试添加");
+                epub.Nav.Insert(0, new NavItem { Title = "封面", Href = Util.ZipRelativePath(Path.GetDirectoryName(epub.GetNav().Href), epub.GetCoverXhtml().Href) });
+            }
         }
 
         // 处理特殊样式
@@ -462,6 +469,10 @@ namespace EpubProcess
                             Console.WriteLine("目录中似乎已经有彩页了，跳过彩页处理");
                         }
                     }
+                }
+                else
+                {
+                    Console.WriteLine("没有找到封面，跳过制作信息和彩页处理");
                 }
             }
             else
