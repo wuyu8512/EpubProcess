@@ -176,8 +176,8 @@ namespace EpubProcess
 
             epub.CreateCoverXhtml(id);
 
-            var converNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
-            if (converNav == null)
+            var coverNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
+            if (coverNav == null)
             {
                 Console.WriteLine("目录中似乎没有封面，尝试添加");
                 epub.Nav.Insert(0, new NavItem { Title = "封面", Href = Util.ZipRelativePath(Path.GetDirectoryName(epub.GetNav().Href), epub.GetCoverXhtml().Href) });
