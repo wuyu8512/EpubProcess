@@ -392,7 +392,7 @@ namespace EpubProcess
             if (title != null)
             {
                 var content = await epub.GetItemContentByIDAsync(title.ID);
-                if (content.Contains("logo-title.jpg")) epub.DeleteItem(title.ID);
+                if (content.Contains("Images/logo")) epub.DeleteItem(title.ID);
             }
 
             // 添加制作信息
