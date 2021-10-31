@@ -415,8 +415,8 @@ namespace EpubProcess
                 var coverNav = epub.Nav.FirstOrDefault(c => c.Title == "封面");
                 if (coverNav != null)
                 {
-                    var converHref = Util.ZipResolvePath(Path.GetDirectoryName(epub.GetNav().Href), coverNav.Href);
-                    cover = epub.Package.Manifest.FirstOrDefault(x => x.Href == converHref);
+                    var coverHref = Util.ZipResolvePath(Path.GetDirectoryName(epub.GetNav().Href), coverNav.Href);
+                    cover = epub.Package.Manifest.FirstOrDefault(x => x.Href == coverHref);
                 }
                 if (cover == null)
                 {
@@ -425,26 +425,26 @@ namespace EpubProcess
                 }
             }
             var coverSpine = epub.Package.Spine.FirstOrDefault(c => c.IdRef == cover.ID);
-            var converIndex = epub.Package.Spine.IndexOf(coverSpine);
+            var coverIndex = epub.Package.Spine.IndexOf(coverSpine);
             epub.Package.Spine.Remove(spine);
-            epub.Package.Spine.Insert(converIndex + 1, spine);
+            epub.Package.Spine.Insert(coverIndex + 1, spine);
             var nav = epub.GetNav();
             if (nav != null)
             {
-                var converNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
-                if (converNav != null)
+                var coverNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
+                if (coverNav != null)
                 {
                     var messageNav = new NavItem
                     {
                         Href = Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), "Text/message.xhtml"),
                         Title = "製作信息"
                     };
-                    converNav.BaseElement.AddAfterSelf(messageNav.BaseElement);
+                    coverNav.BaseElement.AddAfterSelf(messageNav.BaseElement);
 
                     // 设置彩页
                     if (!epub.Nav.Any(x => x.Title.StartsWith("彩頁")))
                     {
-                        var id = epub.Package.Spine[converIndex + 2].IdRef;
+                        var id = epub.Package.Spine[coverIndex + 2].IdRef;
                         var href = epub.GetEntryName(id);
                         if (!epub.Nav.Any(x => x.Href == Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), href)))
                         {
