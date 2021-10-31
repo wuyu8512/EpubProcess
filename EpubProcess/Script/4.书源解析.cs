@@ -25,7 +25,7 @@ namespace EpubProcess
         {
             // 删掉js和json，居然还有这两种文件????
             // 删掉所有的Style文件，用默认的替换，此处必须ToArray，否则会遇到多次迭代问题
-            epub.GetItems(new[] { ".css",".js",".json" }).ToArray().ForEach(item => epub.DeleteItem(item.ID));
+            epub.GetItems(new[] { ".css", ".js", ".json" }).ToArray().ForEach(item => epub.DeleteItem(item.ID));
             epub.AddItem(new EpubItem
             {
                 EntryName = "Styles/style.css",
@@ -119,10 +119,15 @@ namespace EpubProcess
                 svg.OuterHtml = div.ToXhtml();
             }
             // 处理黑白图片
-            foreach (var imgNode in doc.QuerySelectorAll("p img ,div img:first-child"))
+            foreach (var imgNode in doc.QuerySelectorAll("p img:first-child ,div img:first-child"))
             {
                 // 无法很好的处理所有情况，需要后续观察
-                if ((imgNode.ParentElement is IHtmlParagraphElement || imgNode.ParentElement is IHtmlDivElement) &&  imgNode.ParentElement.TextContent.IsEmpty())
+                if (imgNode.ParentElement.ClassName != "flower")
+                {
+                    imgNode.ParentElement.RemoveAttribute("class");
+                    imgNode.RemoveAttribute("class");
+                }
+                else if ((imgNode.ParentElement is IHtmlParagraphElement || imgNode.ParentElement is IHtmlDivElement) && imgNode.ParentElement.TextContent.IsEmpty())
                 {
                     var src = imgNode.GetAttribute("src");
 
@@ -224,7 +229,7 @@ namespace EpubProcess
                 Console.WriteLine("本epub无法找到目录，跳过目录处理");
                 return;
             }
-            var last = epub.Nav.FirstOrDefault(c=>c.Title == "版權頁");
+            var last = epub.Nav.FirstOrDefault(c => c.Title == "版權頁");
             if (last != null)
             {
                 var basePath = Path.GetDirectoryName(nav.Href);
@@ -458,7 +463,7 @@ namespace EpubProcess
                     {
                         var id = epub.Package.Spine[coverIndex + 3].IdRef;
                         var href = epub.GetEntryName(id);
-                        if (!epub.Nav.Any(x=>x.Href == Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), href)))
+                        if (!epub.Nav.Any(x => x.Href == Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), href)))
                         {
                             var illusNav = new NavItem { Href = Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), href), Title = "彩頁" };
                             summaryNav.BaseElement.AddAfterSelf(illusNav.BaseElement);
