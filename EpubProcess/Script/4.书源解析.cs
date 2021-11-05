@@ -21,6 +21,8 @@ namespace EpubProcess
 
         private static readonly char[] EmptyChar = new[] { ' ', '\r', '\n', '\t', '　' };
 
+        private static string IllusAuthor = "{0}";
+
         public override async Task<int> ParseAsync(EpubBook epub)
         {
             // 删掉js和json，居然还有这两种文件????
@@ -244,6 +246,12 @@ namespace EpubProcess
                     epub.DeleteItem(imgItem.ID);
                 }
 
+                var match = Regex.Match("<p>插畫：(.*?)</p>", content);
+                if (match.Success && match.Groups.Count > 0)
+                {
+                    IllusAuthor = match.Groups[0].Value;
+                }
+
                 epub.DeleteItem(id);
                 last.Remove();
             }
@@ -385,7 +393,7 @@ namespace EpubProcess
             var message = await File.ReadAllTextAsync("Script/Res/message.xhtml");
             epub.AddItem(new EpubItem
             {
-                Data = Encoding.UTF8.GetBytes(string.Format(message, epub.Author, "{0}")), // 此处填写插画师，在插画师处理插件中补全
+                Data = Encoding.UTF8.GetBytes(string.Format(message, epub.Author, IllusAuthor)), // 此处填写插画师，在插画师处理插件中补全
                 EntryName = "Text/message.xhtml",
                 ID = "message.xhtml"
             });

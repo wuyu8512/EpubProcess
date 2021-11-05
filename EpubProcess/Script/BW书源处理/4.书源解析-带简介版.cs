@@ -21,6 +21,8 @@ namespace EpubProcess
 
         private static readonly char[] EmptyChar = new[] { ' ', '\r', '\n', '\t', '　' };
 
+        private static string IllusAuthor = "{0}";
+
         public override async Task<int> ParseAsync(EpubBook epub)
         {
             // 删掉js和json，居然还有这两种文件????
@@ -244,6 +246,12 @@ namespace EpubProcess
                     epub.DeleteItem(imgItem.ID);
                 }
 
+                var match = Regex.Match("<p>插畫：(.*?)</p>", content);
+                if (match.Success && match.Groups.Count > 0)
+                {
+                    IllusAuthor = match.Groups[0].Value;
+                }
+
                 epub.DeleteItem(id);
                 last.Remove();
             }
@@ -252,26 +260,7 @@ namespace EpubProcess
             epub.Nav.FirstOrDefault(c => c.Href == fileName)?.Remove();
             epub.Package.Spine.FirstOrDefault(c => c.IdRef == nav.ID)?.Remove();
             // 某些书书名页和目录页顺序不对，这里尝试调换
-            //var contentNav = epub.Nav.FirstOrDefault(x => x.Title == "目錄");
             var smNav = epub.Nav.FirstOrDefault(x => x.Title == "書名頁");
-            //if (contentNav != null && smNav != null && contentNav.BaseElement.NextNode == smNav.BaseElement)
-            //{
-            //    var fullPath = Util.ZipResolvePath(Path.GetDirectoryName(nav.Href), contentNav.Href);
-            //    var contentItem = epub.Package.Manifest.FirstOrDefault(x => x.Href == fullPath);
-            //    var contentSpine = epub.Package.Spine.FirstOrDefault(x => x.IdRef == contentItem.ID);
-            //    var contentIndex = epub.Package.Spine.IndexOf(contentSpine);
-
-            //    var id = epub.Package.Spine[contentIndex - 1].IdRef;
-            //    var smItem = epub.Package.Manifest.FirstOrDefault(x => x.ID == id);
-            //    if (smItem.Href == Util.ZipResolvePath(Path.GetDirectoryName(nav.Href), smNav.Href))
-            //    {
-            //        Console.WriteLine("书名页和目录页顺序相反，开始调换位置");
-            //        System.Xml.Linq.XElement temp = new(contentNav.BaseElement);
-            //        contentNav.BaseElement.ReplaceWith(smNav.BaseElement);
-            //        smNav.BaseElement.ReplaceWith(temp);
-            //    }
-            //}
-            // 直接删除，不调换了
             smNav?.Remove();
         }
 
@@ -404,7 +393,7 @@ namespace EpubProcess
             var message = await File.ReadAllTextAsync("Script/Res/message.xhtml");
             epub.AddItem(new EpubItem
             {
-                Data = Encoding.UTF8.GetBytes(string.Format(message, epub.Author, "{0}")), // 此处填写插画师，在插画师处理插件中补全
+                Data = Encoding.UTF8.GetBytes(string.Format(message, epub.Author, IllusAuthor)), // 此处填写插画师，在插画师处理插件中补全
                 EntryName = "Text/message.xhtml",
                 ID = "message.xhtml"
             });
