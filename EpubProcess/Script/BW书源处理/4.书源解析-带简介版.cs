@@ -13,7 +13,7 @@ using Wuyu.Epub;
 
 namespace EpubProcess
 {
-    class EpubParse : Script
+    class EpubParseSummary : Script
     {
         private static readonly IConfiguration Config = Configuration.Default.WithCss().WithJs();
         private static readonly IBrowsingContext Context = BrowsingContext.New(Config);
@@ -176,8 +176,8 @@ namespace EpubProcess
 
             epub.CreateCoverXhtml(id);
 
-            var coverNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
-            if (coverNav == null)
+            var converNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
+            if (converNav == null)
             {
                 Console.WriteLine("目录中似乎没有封面，尝试添加");
                 epub.Nav.Insert(0, new NavItem { Title = "封面", Href = Util.ZipRelativePath(Path.GetDirectoryName(epub.GetNav().Href), epub.GetCoverXhtml().Href) });
@@ -251,8 +251,27 @@ namespace EpubProcess
             var fileName = Path.GetFileName(nav.Href);
             epub.Nav.FirstOrDefault(c => c.Href == fileName)?.Remove();
             epub.Package.Spine.FirstOrDefault(c => c.IdRef == nav.ID)?.Remove();
-            // 某些书书名页和目录页顺序不对，这里尝试删除书名页
+            // 某些书书名页和目录页顺序不对，这里尝试调换
+            //var contentNav = epub.Nav.FirstOrDefault(x => x.Title == "目錄");
             var smNav = epub.Nav.FirstOrDefault(x => x.Title == "書名頁");
+            //if (contentNav != null && smNav != null && contentNav.BaseElement.NextNode == smNav.BaseElement)
+            //{
+            //    var fullPath = Util.ZipResolvePath(Path.GetDirectoryName(nav.Href), contentNav.Href);
+            //    var contentItem = epub.Package.Manifest.FirstOrDefault(x => x.Href == fullPath);
+            //    var contentSpine = epub.Package.Spine.FirstOrDefault(x => x.IdRef == contentItem.ID);
+            //    var contentIndex = epub.Package.Spine.IndexOf(contentSpine);
+
+            //    var id = epub.Package.Spine[contentIndex - 1].IdRef;
+            //    var smItem = epub.Package.Manifest.FirstOrDefault(x => x.ID == id);
+            //    if (smItem.Href == Util.ZipResolvePath(Path.GetDirectoryName(nav.Href), smNav.Href))
+            //    {
+            //        Console.WriteLine("书名页和目录页顺序相反，开始调换位置");
+            //        System.Xml.Linq.XElement temp = new(contentNav.BaseElement);
+            //        contentNav.BaseElement.ReplaceWith(smNav.BaseElement);
+            //        smNav.BaseElement.ReplaceWith(temp);
+            //    }
+            //}
+            // 直接删除，不调换了
             smNav?.Remove();
         }
 
@@ -422,15 +441,32 @@ namespace EpubProcess
                     };
                     coverNav.BaseElement.AddAfterSelf(messageNav.BaseElement);
 
+                    // 设置简介
+                    epub.AddItem(new EpubItem
+                    {
+                        Data = Array.Empty<byte>(),
+                        EntryName = "Text/summary.xhtml",
+                        ID = "summary.xhtml"
+                    });
+                    var summarySpine = epub.Package.Spine.FirstOrDefault(c => c.IdRef == "summary.xhtml");
+                    epub.Package.Spine.Remove(summarySpine);
+                    epub.Package.Spine.Insert(coverIndex + 2, summarySpine);
+                    var summaryNav = new NavItem
+                    {
+                        Href = Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), "Text/summary.xhtml"),
+                        Title = "簡介"
+                    };
+                    messageNav.BaseElement.AddAfterSelf(summaryNav.BaseElement);
+
                     // 设置彩页
                     if (!epub.Nav.Any(x => x.Title.StartsWith("彩頁")))
                     {
-                        var id = epub.Package.Spine[coverIndex + 2].IdRef;
+                        var id = epub.Package.Spine[coverIndex + 3].IdRef;
                         var href = epub.GetEntryName(id);
                         if (!epub.Nav.Any(x => x.Href == Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), href)))
                         {
                             var illusNav = new NavItem { Href = Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), href), Title = "彩頁" };
-                            messageNav.BaseElement.AddAfterSelf(illusNav.BaseElement);
+                            summaryNav.BaseElement.AddAfterSelf(illusNav.BaseElement);
                             return;
                         }
                         else
