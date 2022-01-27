@@ -23,6 +23,8 @@ namespace EpubProcess.Process
                 Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll").ForEach(x => fileList.Add(x));
                 Directory.GetFiles(Path.GetDirectoryName(path), "System.*.dll").ForEach(x => fileList.Add(x));
 
+                fileList = fileList.Where(x => !x.Contains("Native")).ToHashSet();
+
                 return fileList.Select(x => MetadataReference.CreateFromFile(x));
             }
         );
@@ -49,7 +51,8 @@ namespace EpubProcess.Process
             if (result.Success)
             {
                 var assembly = Assembly.Load(ms.ToArray(), msPdb.ToArray());
-                var type = assembly.GetTypes().First();
+                var types = assembly.GetTypes();
+                var type = types.FirstOrDefault(x => x.BaseType == typeof(Script));
                 var instance = (Script)Activator.CreateInstance(type);
                 Debug.Assert(instance != null, nameof(instance) + " != null");
                 await instance.ParseAsync(epub);

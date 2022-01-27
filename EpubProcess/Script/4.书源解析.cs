@@ -175,7 +175,7 @@ namespace EpubProcess
             {
                 id = epub.Cover;
             }
-
+              
             epub.CreateCoverXhtml(id);
 
             var coverNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
