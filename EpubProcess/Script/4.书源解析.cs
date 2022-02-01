@@ -178,7 +178,7 @@ namespace EpubProcess
               
             epub.CreateCoverXhtml(id);
 
-            var coverNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
+            var coverNav = epub.Nav.FirstOrDefault(x => x.Title == "封面" || x.Title == "表紙");
             if (coverNav == null)
             {
                 Console.WriteLine("目录中似乎没有封面，尝试添加");
@@ -231,7 +231,7 @@ namespace EpubProcess
                 Console.WriteLine("本epub无法找到目录，跳过目录处理");
                 return;
             }
-            var last = epub.Nav.FirstOrDefault(c => c.Title == "版權頁");
+            var last = epub.Nav.FirstOrDefault(c => c.Title == "版權頁" || c.Title == "奥付");
             if (last != null)
             {
                 var basePath = Path.GetDirectoryName(nav.Href);
@@ -401,7 +401,7 @@ namespace EpubProcess
             var cover = epub.GetCoverXhtml();
             if (cover == null)
             {
-                var coverNav = epub.Nav.FirstOrDefault(c => c.Title == "封面");
+                var coverNav = epub.Nav.FirstOrDefault(c => c.Title == "封面" || c.Title == "表紙");
                 if (coverNav != null)
                 {
                     var coverHref = Util.ZipResolvePath(Path.GetDirectoryName(epub.GetNav().Href), coverNav.Href);
@@ -420,7 +420,7 @@ namespace EpubProcess
             var nav = epub.GetNav();
             if (nav != null)
             {
-                var coverNav = epub.Nav.FirstOrDefault(x => x.Title == "封面");
+                var coverNav = epub.Nav.FirstOrDefault(x => x.Title == "封面" || x.Title == "表紙");
                 if (coverNav != null)
                 {
                     var messageNav = new NavItem
