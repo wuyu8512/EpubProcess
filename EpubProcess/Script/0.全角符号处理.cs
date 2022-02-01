@@ -25,6 +25,9 @@ namespace EpubProcess
 
                 if (item.IsNav) epub.UpDataNav();
             }
+
+            epub.Title = ToDBC(epub.Title);
+
             return 0;
         }
 
