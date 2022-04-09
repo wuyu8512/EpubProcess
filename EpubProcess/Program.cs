@@ -18,8 +18,8 @@ namespace EpubProcess
 
         static async Task Main(string[] args)
         {
-            //var encoding = Console.OutputEncoding;
-            //Console.OutputEncoding = new System.Text.UTF8Encoding(false);
+            var encoding = Console.OutputEncoding;
+            Console.OutputEncoding = new System.Text.UTF8Encoding(false);
 
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
@@ -36,12 +36,11 @@ namespace EpubProcess
                 await Process(epubPath);
             }
 
-            //Console.OutputEncoding = encoding;
+            Console.OutputEncoding = encoding;
         }
 
         static async Task Process(string epubPath)
         {
-            //Console.WriteLine(epubPath);
             var outPath = epubPath.Replace(Path.GetExtension(epubPath), string.Empty) + "_Process.epub";
             var epub = EpubBook.ReadEpub(new FileStream(epubPath, FileMode.Open),
                 new FileStream(outPath, FileMode.Create));
@@ -51,7 +50,6 @@ namespace EpubProcess
             gWatch.Start();
 
             //EpubParse epubParse = new();
-            //await epubParse.ParseAsync(epub);
             //await epubParse.ParseAsync(epub);
 
             var files = Directory.GetFiles($".{Path.DirectorySeparatorChar}Script").ToArray();

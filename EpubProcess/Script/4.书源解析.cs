@@ -222,7 +222,7 @@ namespace EpubProcess
             });
         }
 
-        // 删除版权页，删除目录中的Nav，某些书书名页的位置和阅读顺序不相符，这里直接删掉
+        // 删除版权页，删除目录中的Nav，尝试寻找插画师，某些书书名页的位置和阅读顺序不相符，这里直接删掉
         private static async Task ProcessNav(EpubBook epub)
         {
             var nav = epub.GetNav();
@@ -246,10 +246,11 @@ namespace EpubProcess
                     epub.DeleteItem(imgItem.ID);
                 }
 
-                var match = Regex.Match("<p>插畫：(.*?)</p>", content);
+                var match = Regex.Match(content, "<p>(?:繪師|插畫)：(.*?)</p>");
                 if (match.Success && match.Groups.Count > 0)
                 {
-                    IllusAuthor = match.Groups[0].Value;
+                    var temp = HtmlParser.ParseDocument($"<div>{match.Groups[1].Value}</div>");
+                    IllusAuthor = temp.DocumentElement.TextContent;
                 }
 
                 epub.DeleteItem(id);

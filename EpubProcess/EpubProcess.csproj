@@ -10,12 +10,12 @@
 
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="0.16.1" />
-    <PackageReference Include="AngleSharp.Css" Version="0.16.3" />
+    <PackageReference Include="AngleSharp.Css" Version="0.16.4" />
     <PackageReference Include="AngleSharp.Io" Version="0.16.0" />
     <PackageReference Include="AngleSharp.Js" Version="0.15.0" />
     <PackageReference Include="AngleSharp.Wasm" Version="0.13.0" />
     <PackageReference Include="Jint" Version="2.11.58" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.1.0" />
     <PackageReference Include="pythonnet" Version="3.0.0-preview2021-08-03" />
   </ItemGroup>
 
@@ -24,39 +24,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Script\0.全角符号处理.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Script\8.插画师处理.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Update="Script\BW书源处理\0.规范化为Sigil格式.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Update="Script\99999.代码美化改进.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Update="Script\0.全角符号处理.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Update="Script\2.替换样例.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Update="Script\4.书源解析.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Update="Script\文学少女.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="Script\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Script\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
   </ItemGroup>
 
 </Project>
