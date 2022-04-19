@@ -231,11 +231,27 @@ namespace EpubProcess
                 Console.WriteLine("本epub无法找到目录，跳过目录处理");
                 return;
             }
+
             var last = epub.Nav.FirstOrDefault(c => c.Title == "版權頁" || c.Title == "奥付");
+            string href = null;
+            string basePath = null;
             if (last != null)
             {
-                var basePath = Path.GetDirectoryName(nav.Href);
-                var id = epub.GetItemByHref(Util.ZipResolvePath(basePath, last.Href.Split('#')[0])).ID;
+                href = last.Href.Split('#')[0];
+                basePath = Path.GetDirectoryName(nav.Href);
+            }
+            else
+            {
+                var colophon = epub.GetHtmlItems().FirstOrDefault(x => x.Href.Contains("colophon"));
+                if (colophon != null)
+                {
+                    href = colophon.Href;
+                    basePath = "";
+                }
+            }
+            if (href != null)
+            {
+                var id = epub.GetItemByHref(Util.ZipResolvePath(basePath, href)).ID;
                 var content = epub.GetItemContentByID(id);
                 var doc = await HtmlParser.ParseDocumentAsync(content);
                 foreach (IHtmlImageElement img in doc.QuerySelectorAll("img"))
@@ -246,7 +262,7 @@ namespace EpubProcess
                     epub.DeleteItem(imgItem.ID);
                 }
 
-                var match = Regex.Match(content, "(?:繪師|插畫)：(.*?)</p>");
+                var match = Regex.Match(content, "(?:繪師|插畫|繪圖|封面繪師|イラスト)(?:：|　)(.*?)</p>");
                 if (match.Success && match.Groups.Count > 0)
                 {
                     var temp = HtmlParser.ParseDocument($"<div>{match.Groups[1].Value}</div>");
@@ -254,7 +270,7 @@ namespace EpubProcess
                 }
 
                 epub.DeleteItem(id);
-                last.Remove();
+                last?.Remove();
             }
             // 假如Nav和Spine文件包含自身，则删除
             var fileName = Path.GetFileName(nav.Href);
