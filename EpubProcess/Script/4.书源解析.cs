@@ -246,7 +246,7 @@ namespace EpubProcess
                     epub.DeleteItem(imgItem.ID);
                 }
 
-                var match = Regex.Match(content, "<p>(?:繪師|插畫)：(.*?)</p>");
+                var match = Regex.Match(content, "(?:繪師|插畫)：(.*?)</p>");
                 if (match.Success && match.Groups.Count > 0)
                 {
                     var temp = HtmlParser.ParseDocument($"<div>{match.Groups[1].Value}</div>");
@@ -415,9 +415,9 @@ namespace EpubProcess
                 }
             }
             var coverSpine = epub.Package.Spine.FirstOrDefault(c => c.IdRef == cover.ID);
-            var coverIndex = epub.Package.Spine.IndexOf(coverSpine);
+            var index = epub.Package.Spine.IndexOf(coverSpine);
             epub.Package.Spine.Remove(spine);
-            epub.Package.Spine.Insert(coverIndex + 1, spine);
+            epub.Package.Spine.Insert(++index, spine);
             var nav = epub.GetNav();
             if (nav != null)
             {
@@ -430,16 +430,47 @@ namespace EpubProcess
                         Title = "製作信息"
                     };
                     coverNav.BaseElement.AddAfterSelf(messageNav.BaseElement);
+                    var baseElement = messageNav.BaseElement;
+
+                    var summaryElement = epub.Package.Metadata.GetMetaDataItem(EpubBook.DcNs + "description").FirstOrDefault();
+                    if (summaryElement != null)
+                    {
+                        var content = await File.ReadAllTextAsync("Script/Res/content.html");
+                        var summary = summaryElement.Value;
+                        var summaryLine = summary.Split('\r', '\n');
+                        for (int i = 0; i < summaryLine.Length; i++)
+                        {
+                            summaryLine[i] = $"<p>{summaryLine[i]}</p>";
+                        }
+                        content = String.Format(content, "简介", string.Join('\n', summaryLine));
+                        epub.AddItem(new EpubItem
+                        {
+                            Data = Encoding.UTF8.GetBytes(content),
+                            EntryName = "Text/summary.xhtml",
+                            ID = "summary.xhtml"
+                        });
+                        var summarysSpine = epub.Package.Spine.FirstOrDefault(c => c.IdRef == "summary.xhtml");
+                        epub.Package.Spine.Remove(summarysSpine);
+                        epub.Package.Spine.Insert(++index, summarysSpine);
+
+                        var summaryNav = new NavItem
+                        {
+                            Href = Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), "Text/summary.xhtml"),
+                            Title = "简介"
+                        };
+                        messageNav.BaseElement.AddAfterSelf(summaryNav.BaseElement);
+                        baseElement = summaryNav.BaseElement;
+                    }
 
                     // 设置彩页
                     if (!epub.Nav.Any(x => x.Title.StartsWith("彩頁")))
                     {
-                        var id = epub.Package.Spine[coverIndex + 2].IdRef;
+                        var id = epub.Package.Spine[++index].IdRef;
                         var href = epub.GetEntryName(id);
                         if (!epub.Nav.Any(x => x.Href == Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), href)))
                         {
                             var illusNav = new NavItem { Href = Util.ZipRelativePath(Path.GetDirectoryName(nav.Href), href), Title = "彩頁" };
-                            messageNav.BaseElement.AddAfterSelf(illusNav.BaseElement);
+                            baseElement.AddAfterSelf(illusNav.BaseElement);
                             return;
                         }
                         else
